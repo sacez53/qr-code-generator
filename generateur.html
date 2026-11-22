@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#1d2bc4" />
+  <title>Générateur de QR code</title>
+  <meta name="description" content="Créez un QR code personnalisé : formes, couleurs, logo SVG et aperçu en direct." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%231d2bc4' d='M2 2h9v9H2zm11 0h9v9h-9zM2 13h9v9H2zm11 0h4v4h-4zm5 5h4v4h-4z'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="stage" aria-label="Aperçu">
+    <div class="stage-head">
+      <h1><a href="index.html" title="Retour à l'accueil" aria-label="Générateur de QR code, retour à l'accueil"><span class="title-prefix">Générateur de </span>QR code</a></h1>
+      <button class="quick" type="button" id="quick-download">Télécharger</button>
+    </div>
+    <div class="sticker-wrap">
+      <div class="sticker" id="sticker">
+        <canvas id="preview" width="1000" height="1000" role="img" hidden></canvas>
+        <p class="empty" id="empty" hidden></p>
+      </div>
+    </div>
+    <p class="status" id="status" role="status"></p>
+  </main>
+
+  <form class="panel" id="form" autocomplete="off">
+    <section class="group is-active" data-tab="content">
+      <h2>Contenu</h2>
+      <div class="choices" id="type" role="radiogroup" aria-label="Type de contenu"></div>
+
+      <div class="stack" style="margin-top:14px">
+        <div class="stack" data-type="url">
+          <label class="field"><span>Adresse du site</span>
+            <input type="url" data-field="url" inputmode="url" placeholder="exemple.fr" /></label>
+        </div>
+
+        <div class="stack" data-type="text" hidden>
+          <label class="field"><span>Texte</span>
+            <textarea data-field="text" rows="3"></textarea></label>
+        </div>
+
+        <div class="stack" data-type="wifi" hidden>
+          <label class="field"><span>Nom du réseau</span>
+            <input type="text" data-field="ssid" /></label>
+          <label class="field"><span>Mot de passe</span>
+            <input type="password" data-field="wifiPass" autocomplete="new-password" /></label>
+          <div class="two">
+            <label class="field"><span>Sécurité</span>
+              <select data-field="wifiSec">
+                <option value="WPA">WPA / WPA2 / WPA3</option>
+                <option value="WEP">WEP</option>
+                <option value="nopass">Aucune</option>
+              </select></label>
+            <label class="check" style="align-self:end;min-height:40px">
+              <input type="checkbox" data-field="wifiHidden" /> Réseau masqué</label>
+          </div>
+        </div>
+
+        <div class="stack" data-type="email" hidden>
+          <label class="field"><span>Destinataire</span>
+            <input type="email" data-field="mailTo" placeholder="nom@exemple.fr" /></label>
+          <label class="field"><span>Objet</span>
+            <input type="text" data-field="mailSubject" /></label>
+          <label class="field"><span>Message</span>
+            <textarea data-field="mailBody" rows="3"></textarea></label>
+        </div>
+
+        <div class="stack" data-type="tel" hidden>
+          <label class="field"><span>Numéro de téléphone</span>
+            <input type="tel" data-field="tel" placeholder="+33 6 12 34 56 78" /></label>
+        </div>
+
+        <div class="stack" data-type="contact" hidden>
+          <div class="two">
+            <label class="field"><span>Prénom</span><input type="text" data-field="firstName" /></label>
+            <label class="field"><span>Nom</span><input type="text" data-field="lastName" /></label>
+          </div>
+          <label class="field"><span>Téléphone</span><input type="tel" data-field="cTel" /></label>
+          <label class="field"><span>E-mail</span><input type="email" data-field="cMail" /></label>
+          <label class="field"><span>Entreprise</span><input type="text" data-field="cOrg" /></label>
+          <label class="field"><span>Site web</span><input type="url" data-field="cUrl" /></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="group" data-tab="shapes">
+      <h2>Formes</h2>
+      <h3 id="l-dots">Points</h3>
+      <div class="choices" id="dots" role="radiogroup" aria-labelledby="l-dots"></div>
+      <h3 id="l-corner">Contour des coins</h3>
+      <div class="choices" id="corner" role="radiogroup" aria-labelledby="l-corner"></div>
+      <h3 id="l-cornerDot">Centre des coins</h3>
+      <div class="choices" id="cornerDot" role="radiogroup" aria-labelledby="l-cornerDot"></div>
+    </section>
+
+    <section class="group" data-tab="colors">
+      <h2>Couleurs</h2>
+      <div class="swatches" id="swatches"></div>
+      <div class="stack">
+        <div class="color" data-color="fg"><span>Points</span></div>
+        <label class="check"><input type="checkbox" data-key="gradient" /> Dégradé</label>
+        <div class="stack" id="gradient-options" hidden>
+          <div class="color" data-color="fg2"><span>Seconde couleur</span></div>
+          <div class="choices" id="gradType" role="radiogroup" aria-label="Type de dégradé"></div>
+          <label class="range" id="angle-row"><span>Angle</span><output data-for="gradAngle"></output>
+            <input type="range" data-key="gradAngle" min="0" max="360" step="5" /></label>
+        </div>
+        <label class="check"><input type="checkbox" data-key="linked" /> Coins de la même couleur</label>
+        <div class="stack" id="corner-colors" hidden>
+          <div class="color" data-color="cornerColor"><span>Contour des coins</span></div>
+          <div class="color" data-color="cornerDotColor"><span>Centre des coins</span></div>
+        </div>
+        <div class="color" data-color="bg" id="bg-row"><span>Fond</span></div>
+        <label class="check"><input type="checkbox" data-key="transparent" /> Fond transparent</label>
+      </div>
+    </section>
+
+    <section class="group" data-tab="logo">
+      <h2>Logo</h2>
+      <div class="stack">
+        <label class="drop" id="drop">
+          <input class="sr-only" type="file" id="logo-input" accept=".svg,image/svg+xml" />
+          <span class="for-mouse">Déposez un fichier SVG ou cliquez pour le choisir</span>
+          <span class="for-touch">Choisir un fichier SVG</span>
+        </label>
+
+        <div class="logo-file" id="logo-file" hidden>
+          <img id="logo-thumb" alt="Logo importé" />
+          <p id="logo-name"></p>
+          <button class="btn" type="button" id="logo-remove">Retirer</button>
+        </div>
+
+        <p class="error" id="logo-error" role="alert" hidden></p>
+
+        <details class="paste" id="paste-box">
+          <summary>Coller le code SVG</summary>
+          <textarea id="logo-code" rows="4" spellcheck="false" aria-label="Code SVG" placeholder="<svg ...>...</svg>"></textarea>
+          <button class="btn" type="button" id="logo-apply">Utiliser ce code</button>
+        </details>
+
+        <div class="stack" id="logo-options" hidden>
+          <label class="range"><span>Taille du logo</span><output data-for="logoSize"></output>
+            <input type="range" data-key="logoSize" min="0.1" max="0.45" step="0.01" /></label>
+          <label class="range"><span>Espace autour du logo</span><output data-for="logoMargin"></output>
+            <input type="range" data-key="logoMargin" min="0" max="30" step="1" /></label>
+          <label class="check"><input type="checkbox" data-key="hideDots" /> Masquer les points derrière le logo</label>
+        </div>
+      </div>
+    </section>
+
+    <section class="group" data-tab="export">
+      <h2>Réglages</h2>
+      <div class="stack">
+        <label class="range"><span>Marge</span><output data-for="margin"></output>
+          <input type="range" data-key="margin" min="0" max="120" step="4" /></label>
+        <div>
+          <h3 id="l-ec">Résistance aux dégâts</h3>
+          <div class="choices" id="ec" role="radiogroup" aria-labelledby="l-ec"></div>
+        </div>
+      </div>
+    </section>
+
+    <button class="btn reset" type="button" id="reset" data-tab="export">Réinitialiser</button>
+
+    <section class="export" id="export" data-tab="export" aria-label="Téléchargement">
+      <label class="field"><span class="sr-only">Format</span>
+        <select data-key="format">
+          <option value="png">PNG</option>
+          <option value="svg">SVG</option>
+          <option value="jpeg">JPEG</option>
+          <option value="webp">WebP</option>
+        </select></label>
+      <label class="field" id="size-field"><span class="sr-only">Dimensions</span>
+        <select data-key="size">
+          <option value="512">512 px</option>
+          <option value="1024">1024 px</option>
+          <option value="2048">2048 px</option>
+          <option value="4096">4096 px</option>
+        </select></label>
+      <button class="btn btn-primary" type="button" id="download">Télécharger</button>
+      <button class="btn" type="button" id="copy" hidden>Copier l'image</button>
+    </section>
+  </form>
+
+  <nav class="tabs" aria-label="Réglages du QR code">
+    <button type="button" data-tab-button="content" aria-current="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"/></svg><span>Contenu</span></button>
+    <button type="button" data-tab-button="shapes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM17.5 4a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zM4 14h7v6H4zM14 14h6v6h-6z"/></svg><span>Formes</span></button>
+    <button type="button" data-tab-button="colors"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s7 7 7 11.5a7 7 0 0 1-14 0C5 10 12 3 12 3z"/></svg><span>Couleurs</span></button>
+    <button type="button" data-tab-button="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM4 16l5-5 4 4 2-2 5 5M15.5 8.5h.01"/></svg><span>Logo</span></button>
+    <button type="button" data-tab-button="export"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 11 12 15.5 16.5 11M5 20h14"/></svg><span>Exporter</span></button>
+  </nav>
+
+  <script src="vendor/qr-code-styling.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
