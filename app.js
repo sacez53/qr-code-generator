@@ -741,6 +741,56 @@
     sync();
   }
 
+  /* Transition depuis l'accueil */
+
+  async function playEntrance() {
+    const html = document.documentElement;
+    const from = window.__qrEntrance;
+    if (!from || !html.classList.contains("is-entering")) return;
+
+    const ghost = new Image();
+    ghost.className = "entrance-ghost";
+    ghost.alt = "";
+    ghost.src = from.image;
+    try {
+      await ghost.decode();
+    } catch {
+      html.classList.remove("is-entering");
+      return;
+    }
+    if (!html.classList.contains("is-entering")) return;
+
+    const to = el.sticker.getBoundingClientRect();
+    const panel = el.form.getBoundingClientRect();
+    const sheet = panel.left > 1
+      ? `translateX(${window.innerWidth - panel.left}px)`
+      : `translateY(${window.innerHeight - panel.top}px)`;
+    const motion = { duration: 560, easing: "cubic-bezier(.22, 1, .36, 1)", fill: "backwards" };
+
+    el.sticker.append(ghost);
+    el.sticker.style.transformOrigin = "0 0";
+    html.classList.replace("is-entering", "is-animating");
+
+    const animations = [
+      el.sticker.animate([
+        { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width})` },
+        { transform: "none" },
+      ], motion),
+      ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, delay: 170, easing: "linear", fill: "both" }),
+      el.form.animate([{ transform: sheet }, { transform: "none" }], motion),
+      $(".tabs").animate([{ transform: sheet }, { transform: "none" }], motion),
+      ...[$(".stage-head"), el.status].map((node) => node.animate(
+        [{ opacity: 0 }, { opacity: 1 }],
+        { duration: 240, delay: 220, easing: "linear", fill: "backwards" },
+      )),
+    ];
+
+    await Promise.allSettled(animations.map((animation) => animation.finished));
+    ghost.remove();
+    el.sticker.style.removeProperty("transform-origin");
+    html.classList.remove("is-animating");
+  }
+
   /* Démarrage */
 
   ["type", "dots", "corner", "cornerDot", "gradType", "ec"].forEach(buildChoices);
@@ -753,5 +803,5 @@
   bindViewport();
   $$("[data-field='wifiSec']").forEach((s) => { s.value = state.fields.wifiSec || "WPA"; });
   syncUi();
-  draw();
+  draw().finally(playEntrance);
 })();

@@ -7,6 +7,21 @@
   <title>Générateur de QR code</title>
   <meta name="description" content="Créez un QR code personnalisé : formes, couleurs, logo SVG et aperçu en direct." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%231d2bc4' d='M2 2h9v9H2zm11 0h9v9h-9zM2 13h9v9H2zm11 0h4v4h-4zm5 5h4v4h-4z'/%3E%3C/svg%3E" />
+  <script>
+    // Prépare la transition avant le premier affichage pour éviter tout flash.
+    (function () {
+      try {
+        var key = "qr-entrance";
+        var data = JSON.parse(sessionStorage.getItem(key));
+        sessionStorage.removeItem(key);
+        if (!data || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        var root = document.documentElement;
+        window.__qrEntrance = data;
+        root.classList.add("is-entering");
+        setTimeout(function () { root.classList.remove("is-entering"); }, 1500);
+      } catch (error) { /* navigation normale */ }
+    })();
+  </script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>

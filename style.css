@@ -82,6 +82,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: grid;
   place-items: center;
   overflow: hidden;
+  position: relative;
   border-radius: 10px;
   background: var(--sticker);
   color: var(--ink);
@@ -96,6 +97,29 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .empty { max-width: 26ch; margin: 0; padding: 16px; text-align: center; color: var(--muted); }
 
 .status { min-height: 1.45em; margin: 0; text-align: center; font-size: 14px; }
+
+/* Transition depuis l'accueil */
+.is-entering, .is-entering body { background: #1d2bc4; }
+
+.is-entering .stage { background: #1d2bc4; transition: none; }
+
+.is-entering .panel, .is-entering .tabs, .is-entering .stage-head,
+.is-entering .status, .is-entering .sticker { visibility: hidden; }
+
+.is-animating { overflow-x: clip; }
+
+.is-animating body { background: var(--stage); overflow-x: clip; }
+
+.is-animating .stage { z-index: 10; }
+
+.entrance-ghost {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
 
 /* Panneau */
 .panel { display: flex; flex-direction: column; min-width: 0; background: var(--paper); }

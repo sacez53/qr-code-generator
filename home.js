@@ -153,6 +153,48 @@
     }
   });
 
+  /* Transition vers le générateur : le QR code est repris sur la page suivante */
+
+  const enter = document.querySelector(".enter");
+  const homeText = document.querySelector(".home-text");
+  let leaving = null;
+
+  enter.addEventListener("click", (event) => {
+    if (leaving) return event.preventDefault();
+    if (still.matches || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    try {
+      startedAt = -INTRO_MS;
+      pointer.power = pointer.target = 0;
+      ripples.length = 0;
+      paint(performance.now());
+      const box = canvas.parentElement.getBoundingClientRect();
+      sessionStorage.setItem("qr-entrance", JSON.stringify({
+        left: box.left,
+        top: box.top,
+        width: box.width,
+        image: canvas.toDataURL("image/png"),
+      }));
+    } catch {
+      return; // Sans stockage, navigation normale.
+    }
+
+    event.preventDefault();
+    leaving = homeText.animate(
+      [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(12px)" }],
+      { duration: 180, easing: "ease-in", fill: "forwards" },
+    );
+    leaving.finished.then(() => location.assign(enter.href)).catch(() => {});
+  });
+
+  // Retour arrière : la page revient dans son état normal.
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted || !leaving) return;
+    leaving.cancel();
+    leaving = null;
+    try { sessionStorage.removeItem("qr-entrance"); } catch { /* stockage indisponible */ }
+  });
+
   startedAt = performance.now();
   resize();
   wake();
