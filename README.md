@@ -4,8 +4,11 @@ Un site simple pour créer des QR codes personnalisés, avec aperçu en direct. 
 
 ## Fonctionnalités
 
-- **Contenus :** lien, texte, Wi-Fi, e-mail, téléphone et fiche contact (vCard).
+- **Contenus :** lien, texte, Wi-Fi, e-mail, téléphone, fiche contact (vCard), SMS, WhatsApp, événement de calendrier, position et réseaux sociaux.
 - **Formes :** 6 styles de points, 3 contours de coins et 2 centres de coins.
+- **Cadres :** bandeau en bas ou en haut, bulle ou contour, avec texte personnalisé.
+- **Création en lot :** import d'un CSV ou d'une liste, jusqu'à 500 QR codes réunis dans un ZIP.
+- **Application :** installable sur l'écran d'accueil et utilisable hors ligne.
 - **Couleurs :** palettes, couleurs libres, dégradé linéaire ou radial, coins séparés et fond transparent.
 - **Logo SVG :** import par fichier, glisser-déposer ou code collé, avec réglage de la taille et de l'espace autour.
 - **Lisibilité :** alerte en cas de contraste faible ou de couleurs inversées, et choix du niveau de correction d'erreur.
@@ -27,16 +30,37 @@ Le bouton « Copier l'image » dépend de l'accès au presse-papiers du navigate
 npx serve .
 ```
 
+## Installer sur iPhone
+
+Le site doit être hébergé en HTTPS. Ouvrez-le dans Safari, touchez Partager, puis « Sur l'écran d'accueil ».
+
+## Création en lot
+
+Le fichier contient une ligne par QR code. Les séparateurs virgule, point-virgule et tabulation sont reconnus :
+
+```csv
+nom;url;cadre
+Table 1;https://exemple.fr/table-1;Menu
+Table 2;https://exemple.fr/table-2;Menu
+```
+
+Choisissez ensuite les colonnes du contenu, du nom de fichier et du texte du cadre. Le lot reprend le style, le format et la taille actuels, avec un maximum de 2048 px par image.
+
 ## Structure
 
 ```text
-index.html        Page d'accueil
-home.css          Styles de l'accueil
-home.js           QR code interactif de l'accueil
-generateur.html   Page du générateur
-style.css         Styles du générateur
-app.js            Logique du générateur
-vendor/           Bibliothèque QR code et police, en local
+index.html            Page d'accueil
+home.css              Styles de l'accueil
+home.js               QR code interactif de l'accueil
+generateur.html       Page du générateur
+style.css             Styles du générateur
+app.js                Logique du générateur
+batch.js              Lecture CSV et création du ZIP
+pwa.js                Activation du mode hors ligne
+sw.js                 Cache hors ligne
+manifest.webmanifest  Description de l'application
+icons/                Icônes de l'application
+vendor/               Bibliothèque QR code et police, en local
 ```
 
 ## Données et confidentialité

@@ -7,7 +7,7 @@
 
   const DEFAULTS = {
     type: "url",
-    fields: { url: "https://example.com", wifiSec: "WPA" },
+    fields: { url: "https://example.com", wifiSec: "WPA", mapApp: "google", socialNet: "instagram" },
     dots: "rounded",
     corner: "extra-rounded",
     cornerDot: "dot",
@@ -30,6 +30,12 @@
     ec: "Q",
     format: "png",
     size: "1024",
+    frame: "none",
+    frameText: "Scannez-moi",
+    frameTextSize: 100,
+    frameLinked: true,
+    frameColor: "#1d2bc4",
+    frameTextColor: "#ffffff",
   };
 
   const ring = (outer, inner) => `<path fill-rule="evenodd" d="${outer} ${inner}"/>`;
@@ -39,6 +45,8 @@
     type: [
       ["url", "Lien"], ["text", "Texte"], ["wifi", "Wi-Fi"],
       ["email", "E-mail"], ["tel", "Téléphone"], ["contact", "Contact"],
+      ["sms", "SMS"], ["whatsapp", "WhatsApp"], ["event", "Événement"],
+      ["place", "Position"], ["social", "Réseaux"],
     ],
     dots: [
       ["square", "Carrés", shape("M3 3h18v9h-9v9H3z")],
@@ -57,6 +65,13 @@
       ["square", "Carré", shape("M6 6h12v12H6z")],
       ["dot", "Rond", '<circle cx="12" cy="12" r="7"/>'],
     ],
+    frame: [
+      ["none", "Aucun", shape("M4 4h16v16H4zM6 6v12h12V6z").replace("<path", '<path fill-rule="evenodd" opacity=".45"')],
+      ["bottom", "Bas", ring("M5 2h14a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3z", "M4.5 4.5v11h15v-11z")],
+      ["top", "Haut", ring("M5 2h14a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3z", "M4.5 8.5v11h15v-11z")],
+      ["bubble", "Bulle", shape("M4 2h16v11H4zM6 17h5l1-2 1 2h5a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2z")],
+      ["outline", "Contour", ring("M5 2h14a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3z", "M5 4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1z")],
+    ],
     gradType: [["linear", "Linéaire"], ["radial", "Radial"]],
     ec: [["L", "7 %"], ["M", "15 %"], ["Q", "25 %"], ["H", "30 %"]],
   };
@@ -69,6 +84,21 @@
     ["Prune", "#4f1a78", "#fbf3ff"],
     ["Pétrole", "#07505e", "#fff6d6"],
   ];
+
+  const FRAME_PRESETS = ["Scannez-moi", "Menu", "Wi-Fi gratuit", "Suivez-nous", "Votre avis", "Payer ici"];
+
+  const SOCIAL_URLS = {
+    instagram: "https://www.instagram.com/{}",
+    tiktok: "https://www.tiktok.com/@{}",
+    youtube: "https://www.youtube.com/@{}",
+    facebook: "https://www.facebook.com/{}",
+    x: "https://x.com/{}",
+    linkedin: "https://www.linkedin.com/in/{}",
+    snapchat: "https://www.snapchat.com/add/{}",
+    threads: "https://www.threads.net/@{}",
+    twitch: "https://www.twitch.tv/{}",
+    github: "https://github.com/{}",
+  };
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -86,6 +116,7 @@
   let drawToken = 0;
   let drawTimer = 0;
   let currentData = "";
+  let refreshBatch = () => {};
   const previewContext = el.preview.getContext("2d");
 
   /* Persistance */
@@ -120,6 +151,50 @@
   const escWifi = (s) => s.replace(/([\\;,:"])/g, "\\$1");
   const escVcard = (s) => s.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([;,])/g, "\\$1");
   const withScheme = (s) => (!s || /^[a-z][a-z0-9+.-]*:/i.test(s) ? s : `https://${s}`);
+
+  const phoneDigits = (s) => s.replace(/[^\d+]/g, "");
+
+  // wa.me attend l'indicatif du pays, sans « + » ni zéro initial.
+  function whatsappNumber(value) {
+    const digits = phoneDigits(value);
+    if (digits.startsWith("+")) return digits.slice(1);
+    if (digits.startsWith("00")) return digits.slice(2);
+    if (digits.startsWith("0")) return `33${digits.slice(1)}`;
+    return digits;
+  }
+
+  const icalDate = (value) => new Date(value).toISOString().replace(/[-:]|\.\d{3}/g, "");
+
+  function buildEvent() {
+    if (!f("evTitle") || !f("evStart")) return "";
+    const start = new Date(f("evStart"));
+    if (Number.isNaN(start.getTime())) return "";
+    const parsedEnd = f("evEnd") ? new Date(f("evEnd")) : null;
+    const end = parsedEnd && parsedEnd > start ? parsedEnd : new Date(start.getTime() + 3600000);
+    const lines = ["BEGIN:VEVENT", `SUMMARY:${escVcard(f("evTitle"))}`, `DTSTART:${icalDate(start)}`, `DTEND:${icalDate(end)}`];
+    if (f("evPlace")) lines.push(`LOCATION:${escVcard(f("evPlace"))}`);
+    if (f("evNotes")) lines.push(`DESCRIPTION:${escVcard(f("evNotes"))}`);
+    lines.push("END:VEVENT");
+    return lines.join("\r\n");
+  }
+
+  function buildPlace() {
+    const place = f("place");
+    if (!place) return "";
+    const coords = place.match(/^(-?\d{1,2}(?:[.,]\d+)?)\s*[,; ]\s*(-?\d{1,3}(?:[.,]\d+)?)$/);
+    const query = coords ? `${coords[1].replace(",", ".")},${coords[2].replace(",", ".")}` : place;
+    return state.fields.mapApp === "apple"
+      ? `https://maps.apple.com/?q=${encodeURIComponent(query)}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  }
+
+  function buildSocial() {
+    const user = f("socialUser").replace(/^@+/, "");
+    if (!user) return "";
+    if (/^https?:\/\//i.test(user)) return user;
+    const template = SOCIAL_URLS[state.fields.socialNet] || SOCIAL_URLS.instagram;
+    return template.replace("{}", encodeURIComponent(user));
+  }
 
   function buildData() {
     switch (state.type) {
@@ -158,6 +233,19 @@
         lines.push("END:VCARD");
         return lines.join("\r\n");
       }
+      case "sms":
+        return f("smsTo") ? `SMSTO:${phoneDigits(f("smsTo"))}:${f("smsBody")}` : "";
+      case "whatsapp": {
+        if (!f("waTo")) return "";
+        const text = f("waBody") ? `?text=${encodeURIComponent(f("waBody"))}` : "";
+        return `https://wa.me/${whatsappNumber(f("waTo"))}${text}`;
+      }
+      case "event":
+        return buildEvent();
+      case "place":
+        return buildPlace();
+      case "social":
+        return buildSocial();
       default:
         return "";
     }
@@ -170,6 +258,11 @@
     email: "Saisissez un destinataire pour créer le QR code.",
     tel: "Saisissez un numéro pour créer le QR code.",
     contact: "Saisissez un nom, un téléphone ou un e-mail pour créer le QR code.",
+    sms: "Saisissez un numéro pour créer le QR code.",
+    whatsapp: "Saisissez un numéro WhatsApp pour créer le QR code.",
+    event: "Saisissez un titre et une date de début pour créer le QR code.",
+    place: "Saisissez une adresse ou utilisez votre position.",
+    social: "Saisissez un nom d'utilisateur pour créer le QR code.",
   };
 
   /* Options de la bibliothèque */
@@ -260,17 +353,6 @@
     }
   }
 
-  async function rasterize(svgBlob, size, format) {
-    const img = await loadSvg(svgBlob);
-    const canvas = document.createElement("canvas");
-    canvas.width = canvas.height = size;
-    canvas.getContext("2d").drawImage(img, 0, 0, size, size);
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, `image/${format}`, 0.95));
-    canvas.width = canvas.height = 0;
-    if (!blob) throw new Error("export");
-    return blob;
-  }
-
   /* Contraste */
 
   function luminance(hex) {
@@ -298,7 +380,166 @@
     if (colors.some((c) => luminance(c) > luminance(state.bg))) {
       return "Couleurs inversées : certains lecteurs ne liront pas ce QR code.";
     }
+    if (state.frame !== "none" && !state.frameLinked && state.frame !== "outline"
+      && contrast(state.frameColor, state.frameTextColor) < 3) {
+      return "Texte du cadre peu lisible : augmentez le contraste.";
+    }
     return "";
+  }
+
+  /* Cadres avec texte */
+
+  const rect = (x, y, w, h) => `M${x} ${y}h${w}v${h}h${-w}z`;
+  const rounded = (x, y, w, h, r) => `M${x + r} ${y}h${w - 2 * r}a${r} ${r} 0 0 1 ${r} ${r}v${h - 2 * r}a${r} ${r} 0 0 1 ${-r} ${r}h${-(w - 2 * r)}a${r} ${r} 0 0 1 ${-r} ${-r}v${-(h - 2 * r)}a${r} ${r} 0 0 1 ${r} ${-r}z`;
+  const readableOn = (color) => (contrast(color, "#ffffff") >= contrast(color, "#15182e") ? "#ffffff" : "#15182e");
+
+  function frameColors() {
+    const fill = state.frameLinked ? state.fg : state.frameColor;
+    if (!state.frameLinked) return { fill, text: state.frameTextColor };
+    return { fill, text: state.frame === "outline" ? fill : readableOn(fill) };
+  }
+
+  function frameLayout(width, opaque) {
+    if (state.frame === "none") {
+      return { width, height: width, qrX: 0, qrY: 0, qrSize: width, shapes: [], label: null };
+    }
+
+    const { fill, text } = frameColors();
+    const surface = state.transparent ? (opaque ? "#ffffff" : null) : state.bg;
+    const edge = Math.round(width * 0.045);
+    const band = Math.round(width * 0.16);
+    const radius = Math.round(width * 0.05);
+
+    if (state.frame === "bubble") {
+      const gap = Math.round(width * 0.04);
+      const bubble = Math.round(width * 0.135);
+      const inset = Math.round(width * 0.06);
+      const height = width + gap + bubble + inset;
+      const top = width + gap;
+      const mid = Math.round(width / 2);
+      const shapes = [{ d: `${rounded(inset, top, width - 2 * inset, bubble, Math.round(bubble / 3))} M${mid - gap} ${top + 1}L${mid} ${top - gap}L${mid + gap} ${top + 1}z`, fill }];
+      if (surface) shapes.unshift({ d: rect(0, 0, width, height), fill: surface });
+      return {
+        width, height, qrX: 0, qrY: 0, qrSize: width, shapes,
+        label: { x: mid, y: top + bubble / 2, base: bubble * 0.56, max: width - 2 * inset - 2 * gap, color: text },
+      };
+    }
+
+    const qrSize = width - 2 * edge;
+    const height = edge + qrSize + band;
+    const qrY = state.frame === "top" ? band : edge;
+    const outer = rounded(0, 0, width, height, radius);
+
+    if (state.frame === "outline") {
+      const shapes = [{ d: `${outer} ${rect(edge, edge, qrSize, height - 2 * edge)}`, fill, rule: "evenodd" }];
+      if (surface) shapes.push({ d: rect(edge, edge + qrSize, qrSize, band - edge), fill: surface });
+      return {
+        width, height, qrX: edge, qrY, qrSize, shapes,
+        label: { x: width / 2, y: edge + qrSize + (band - edge) / 2, base: band * 0.46, max: qrSize - 2 * edge, color: text },
+      };
+    }
+
+    const labelY = state.frame === "top" ? band / 2 + edge / 4 : edge + qrSize + band / 2 - edge / 4;
+    return {
+      width, height, qrX: edge, qrY, qrSize,
+      shapes: [{ d: `${outer} ${rect(edge, qrY, qrSize, qrSize)}`, fill, rule: "evenodd" }],
+      label: { x: width / 2, y: labelY, base: band * 0.5, max: qrSize - 2 * edge, color: text },
+    };
+  }
+
+  const FRAME_FONT = '"Schibsted Grotesk", system-ui, sans-serif';
+  const measureContext = document.createElement("canvas").getContext("2d");
+
+  async function fitLabel(layout, text) {
+    if (!layout.label || !text) return null;
+    await document.fonts.load(`700 40px "Schibsted Grotesk"`, text).catch(() => {});
+    let size = layout.label.base * (Number(state.frameTextSize) / 100);
+    measureContext.font = `700 ${size}px ${FRAME_FONT}`;
+    const measured = measureContext.measureText(text).width;
+    if (measured > layout.label.max) size *= layout.label.max / measured;
+    return { ...layout.label, text, size, baseline: layout.label.y + size * 0.35 };
+  }
+
+  async function renderComposition(data, width, { opaque = false, frameText = state.frameText } = {}) {
+    const layout = frameLayout(width, opaque);
+    const [qrSvg, label] = await Promise.all([
+      renderSvg(data, layout.qrSize, opaque),
+      fitLabel(layout, String(frameText ?? "").trim()),
+    ]);
+    return { layout, qrSvg, label };
+  }
+
+  function paintComposition(context, composition, image) {
+    const { layout, label } = composition;
+    layout.shapes.forEach((item) => {
+      context.fillStyle = item.fill;
+      context.fill(new Path2D(item.d), item.rule || "nonzero");
+    });
+    context.drawImage(image, layout.qrX, layout.qrY, layout.qrSize, layout.qrSize);
+    if (label) {
+      context.fillStyle = label.color;
+      context.font = `700 ${label.size}px ${FRAME_FONT}`;
+      context.textAlign = "center";
+      context.textBaseline = "alphabetic";
+      context.fillText(label.text, label.x, label.baseline);
+    }
+  }
+
+  async function compositionToSvg({ layout, qrSvg, label }) {
+    if (!layout.shapes.length) return qrSvg;
+    const NS = "http://www.w3.org/2000/svg";
+    const source = new DOMParser().parseFromString(await qrSvg.text(), "image/svg+xml");
+    const doc = document.implementation.createDocument(NS, "svg", null);
+    const svg = doc.documentElement;
+    const set = (node, attributes) => {
+      Object.entries(attributes).forEach(([name, value]) => node.setAttribute(name, value));
+      return node;
+    };
+    set(svg, { width: layout.width, height: layout.height, viewBox: `0 0 ${layout.width} ${layout.height}` });
+
+    if (label) {
+      const style = doc.createElementNS(NS, "style");
+      style.textContent = `@font-face{font-family:"QR Frame";src:url("${window.QR_FONT_DATA}") format("woff2");font-weight:400 900}`;
+      svg.append(style);
+    }
+    layout.shapes.forEach((item) => {
+      const path = set(doc.createElementNS(NS, "path"), { d: item.d, fill: item.fill });
+      if (item.rule) path.setAttribute("fill-rule", item.rule);
+      svg.append(path);
+    });
+    const nested = doc.importNode(source.documentElement, true);
+    set(nested, { x: layout.qrX, y: layout.qrY, width: layout.qrSize, height: layout.qrSize });
+    svg.append(nested);
+    if (label) {
+      const text = set(doc.createElementNS(NS, "text"), {
+        x: label.x, y: label.baseline, fill: label.color, "text-anchor": "middle",
+        "font-family": '"QR Frame", "Schibsted Grotesk", system-ui, sans-serif',
+        "font-size": label.size, "font-weight": 700,
+      });
+      text.textContent = label.text;
+      svg.append(text);
+    }
+    return new Blob([new XMLSerializer().serializeToString(doc)], { type: "image/svg+xml" });
+  }
+
+  async function renderBlob(data, format, size, frameText = state.frameText) {
+    const composition = await renderComposition(data, Number(size), { opaque: format === "jpeg", frameText });
+    if (format === "svg") return compositionToSvg(composition);
+
+    const image = await loadSvg(composition.qrSvg);
+    const canvas = document.createElement("canvas");
+    canvas.width = composition.layout.width;
+    canvas.height = composition.layout.height;
+    const context = canvas.getContext("2d");
+    if (format === "jpeg") {
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    paintComposition(context, composition, image);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, `image/${format}`, 0.95));
+    canvas.width = canvas.height = 0;
+    if (!blob) throw new Error("export");
+    return blob;
   }
 
   /* Rendu */
@@ -319,6 +560,8 @@
   function showEmpty(message, isError) {
     currentData = "";
     el.preview.hidden = true;
+    el.sticker.style.removeProperty("--sticker-ratio");
+    el.sticker.classList.remove("has-frame");
     el.empty.hidden = false;
     el.empty.textContent = message;
     el.status.textContent = isError ? "QR code non généré." : "";
@@ -332,13 +575,20 @@
 
     try {
       // Dessin en pleine résolution : la réduction à l'écran reste nette.
-      const svg = await renderSvg(data, PREVIEW_SIZE);
+      const composition = await renderComposition(data, PREVIEW_SIZE);
       if (token !== drawToken) return;
-      const img = await loadSvg(svg);
+      const img = await loadSvg(composition.qrSvg);
       if (token !== drawToken) return;
 
-      previewContext.clearRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
-      previewContext.drawImage(img, 0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
+      const { width, height } = composition.layout;
+      if (el.preview.width !== width || el.preview.height !== height) {
+        el.preview.width = width;
+        el.preview.height = height;
+      }
+      previewContext.clearRect(0, 0, width, height);
+      paintComposition(previewContext, composition, img);
+      el.sticker.style.setProperty("--sticker-ratio", String(height / width));
+      el.sticker.classList.toggle("has-frame", state.frame !== "none" && state.frame !== "bubble");
       el.preview.setAttribute("aria-label", `QR code contenant : ${data.slice(0, 120)}`);
       el.preview.hidden = false;
       el.empty.hidden = true;
@@ -421,6 +671,7 @@
   function formatOutput(key) {
     if (key === "logoSize") return `${Math.round(state.logoSize * 100)} %`;
     if (key === "gradAngle") return `${state.gradAngle}°`;
+    if (key === "frameTextSize") return `${state.frameTextSize} %`;
     return `${state[key]} px`;
   }
 
@@ -452,6 +703,8 @@
     $("#angle-row").hidden = state.gradType !== "linear";
     $("#corner-colors").hidden = state.linked;
     $("#bg-row").hidden = state.transparent;
+    $("#frame-options").hidden = state.frame === "none";
+    $("#frame-colors").hidden = state.frameLinked;
 
     el.logoFile.hidden = !state.logo;
     el.drop.hidden = Boolean(state.logo);
@@ -472,6 +725,7 @@
     root.setProperty("--sticker", state.transparent ? "#ffffff" : state.bg);
     $('meta[name="theme-color"]').content = state.fg;
     el.sticker.classList.toggle("is-transparent", state.transparent);
+    refreshBatch();
   }
 
   function bindFields() {
@@ -489,12 +743,16 @@
 
     $$("[data-key]").forEach((input) => {
       const key = input.dataset.key;
-      input.addEventListener(input.type === "range" ? "input" : "change", () => {
+      input.addEventListener(input.type === "range" || input.type === "text" ? "input" : "change", () => {
         if (input.type === "checkbox") {
           state[key] = input.checked;
           if (key === "linked" && !input.checked) {
             state.cornerColor = state.fg;
             state.cornerDotColor = state.fg;
+          }
+          if (key === "frameLinked" && !input.checked) {
+            state.frameColor = state.fg;
+            state.frameTextColor = readableOn(state.fg);
           }
         } else if (input.type === "range") {
           state[key] = Number(input.value);
@@ -506,6 +764,21 @@
     });
   }
 
+  function buildFramePresets() {
+    $("#frame-presets").replaceChildren(...FRAME_PRESETS.map((label) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "chip";
+      button.textContent = label;
+      button.addEventListener("click", () => {
+        state.frameText = label;
+        $('[data-key="frameText"]').value = label;
+        schedule();
+      });
+      return button;
+    }));
+  }
+
   function buildSwatches() {
     $("#swatches").replaceChildren(...PALETTES.map(([name, fg, bg]) => {
       const button = document.createElement("button");
@@ -515,7 +788,7 @@
       button.setAttribute("aria-label", `Palette ${name}`);
       button.style.background = `linear-gradient(135deg, ${fg} 50%, ${bg} 50%)`;
       button.addEventListener("click", () => {
-        Object.assign(state, { fg, bg, cornerColor: fg, cornerDotColor: fg, transparent: false, gradient: false });
+        Object.assign(state, { fg, bg, cornerColor: fg, cornerDotColor: fg, frameColor: fg, frameTextColor: readableOn(fg), transparent: false, gradient: false });
         schedule();
       });
       return button;
@@ -623,9 +896,33 @@
   /* Export */
 
   async function exportBlob(format, size) {
-    const pixels = Number(size);
-    const svg = await renderSvg(currentData, pixels, format === "jpeg");
-    return format === "svg" ? svg : rasterize(svg, pixels, format);
+    return renderBlob(currentData, format, size);
+  }
+
+  const isInstalled = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+
+  // Une app installée sur iPhone passe par le menu de partage pour enregistrer.
+  async function saveBlob(blob, name) {
+    if (isInstalled() && navigator.canShare) {
+      const file = new File([blob], name, { type: blob.type });
+      if (navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file] });
+          return "shared";
+        } catch (error) {
+          if (error.name === "AbortError") return "cancelled";
+        }
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    return "downloaded";
   }
 
   function flash(message) {
@@ -641,15 +938,9 @@
       el.download.disabled = true;
       try {
         const blob = await exportBlob(state.format, state.size);
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `qrcode.${state.format === "jpeg" ? "jpg" : state.format}`;
-        document.body.append(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
-        flash("QR code téléchargé.");
+        const outcome = await saveBlob(blob, `qrcode.${state.format === "jpeg" ? "jpg" : state.format}`);
+        if (outcome === "downloaded") flash("QR code téléchargé.");
+        if (outcome === "shared") flash("QR code partagé.");
       } catch {
         flash("Téléchargement impossible. Essayez un autre format.");
       } finally {
@@ -682,6 +973,241 @@
       logoError("");
       schedule();
     });
+  }
+
+  /* Création en lot */
+
+  const BATCH_LIMIT = 500;
+  const BATCH_MAX_SIZE = 2048;
+
+  function batchValue(value) {
+    return /^[\w-]+(\.[\w-]+)*\.[a-z]{2,}(\/\S*)?$/i.test(value) ? `https://${value}` : value;
+  }
+
+  function bindBatch() {
+    const ui = {
+      drop: $("#batch-drop"), input: $("#batch-input"), code: $("#batch-code"), pasteBox: $("#batch-paste-box"),
+      error: $("#batch-error"), options: $("#batch-options"), name: $("#batch-name"), header: $("#batch-header"),
+      content: $("#batch-content"), fileCol: $("#batch-file-col"), frameField: $("#batch-frame-field"),
+      frameCol: $("#batch-frame-col"), preview: $("#batch-preview"), run: $("#batch-run"),
+      progressBox: $("#batch-progress-box"), progress: $("#batch-progress"), result: $("#batch-result"),
+    };
+    let batch = null;
+    let cancelled = false;
+    let running = false;
+
+    const showError = (message) => {
+      ui.error.textContent = message;
+      ui.error.hidden = !message;
+    };
+
+    const dataRows = () => (ui.header.checked ? batch.rows.slice(1) : batch.rows);
+
+    function columnLabels() {
+      const count = Math.max(...batch.rows.map((row) => row.cells.length));
+      return Array.from({ length: count }, (_, i) => (ui.header.checked && batch.rows[0].cells[i]) || `Colonne ${i + 1}`);
+    }
+
+    function fillSelect(select, labels, selected, emptyLabel) {
+      const options = labels.map((label, i) => new Option(label, String(i)));
+      if (emptyLabel) options.unshift(new Option(emptyLabel, ""));
+      select.replaceChildren(...options);
+      select.value = selected >= 0 ? String(selected) : (emptyLabel ? "" : "0");
+    }
+
+    function fillColumns() {
+      const labels = columnLabels();
+      const content = QRBatch.guessColumn(labels, /url|lien|link|contenu|content|adresse|site/i);
+      fillSelect(ui.content, labels, Math.max(content, 0));
+      fillSelect(ui.fileCol, labels, QRBatch.guessColumn(labels, /^(nom|name|fichier|file|titre|title)/i), "Numéro automatique");
+      fillSelect(ui.frameCol, labels, QRBatch.guessColumn(labels, /cadre|frame|label|texte/i), "Texte du cadre actuel");
+    }
+
+    function entries() {
+      const contentIndex = Number(ui.content.value);
+      const fileIndex = ui.fileCol.value === "" ? -1 : Number(ui.fileCol.value);
+      const frameIndex = ui.frameCol.value === "" ? -1 : Number(ui.frameCol.value);
+      return dataRows().map((row, index) => ({
+        line: row.line,
+        data: batchValue(row.cells[contentIndex] || ""),
+        base: QRBatch.safeName(fileIndex >= 0 ? row.cells[fileIndex] || "" : "") || `qrcode-${String(index + 1).padStart(3, "0")}`,
+        frameText: frameIndex >= 0 ? row.cells[frameIndex] || "" : state.frameText,
+      }));
+    }
+
+    function refresh() {
+      if (!batch) return;
+      const list = entries();
+      const usable = list.filter((entry) => entry.data).length;
+      ui.frameField.hidden = state.frame === "none";
+      ui.name.textContent = `${batch.name}, ${usable} QR code${usable > 1 ? "s" : ""}`;
+      ui.preview.replaceChildren(...list.filter((entry) => entry.data).slice(0, 3).map((entry) => {
+        const item = document.createElement("li");
+        const name = document.createElement("strong");
+        name.textContent = entry.base;
+        const value = document.createElement("span");
+        value.textContent = entry.data;
+        item.append(name, value);
+        return item;
+      }));
+      ui.run.disabled = running || !usable;
+      const size = Math.min(Number(state.size), BATCH_MAX_SIZE);
+      const format = state.format === "jpeg" ? "JPEG" : state.format === "webp" ? "WebP" : state.format.toUpperCase();
+      ui.run.textContent = `Créer le ZIP de ${usable} ${format}${state.format === "svg" ? "" : ` (${size} px)`}`;
+    }
+
+    function loadBatch(text, name) {
+      const rows = QRBatch.parseCsv(text);
+      if (!rows.length) return showError("Ce fichier est vide. Ajoutez au moins une ligne.");
+      const header = QRBatch.guessHeader(rows);
+      if (rows.length - (header ? 1 : 0) > BATCH_LIMIT) {
+        return showError(`Ce fichier dépasse ${BATCH_LIMIT} lignes. Découpez-le en plusieurs lots.`);
+      }
+      batch = { rows, name };
+      ui.header.checked = header;
+      showError("");
+      ui.result.textContent = "";
+      ui.options.hidden = false;
+      ui.drop.hidden = true;
+      ui.pasteBox.hidden = true;
+      ui.pasteBox.open = false;
+      ui.code.value = "";
+      fillColumns();
+      refresh();
+    }
+
+    async function readFile(file) {
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) return showError("Ce fichier dépasse 5 Mo. Découpez-le en plusieurs lots.");
+      loadBatch(QRBatch.decodeText(await file.arrayBuffer()), file.name);
+    }
+
+    async function run() {
+      const list = entries();
+      const todo = list.filter((entry) => entry.data);
+      const skipped = list.filter((entry) => !entry.data).map((entry) => entry.line);
+      const failed = [];
+      const zipFiles = [];
+      const used = new Set();
+      const extension = state.format === "jpeg" ? "jpg" : state.format;
+      const size = Math.min(Number(state.size), BATCH_MAX_SIZE);
+
+      running = true;
+      cancelled = false;
+      ui.run.disabled = true;
+      ui.progressBox.hidden = false;
+      ui.progress.max = todo.length;
+      ui.progress.value = 0;
+      ui.result.textContent = "";
+
+      try {
+        for (let i = 0; i < todo.length && !cancelled; i += 1) {
+          const entry = todo[i];
+          try {
+            const blob = await renderBlob(entry.data, state.format, size, entry.frameText);
+            zipFiles.push(await QRBatch.zipEntry(QRBatch.uniqueName(entry.base, extension, used), blob));
+          } catch {
+            failed.push(entry.line);
+          }
+          ui.progress.value = i + 1;
+          ui.result.textContent = `${i + 1} sur ${todo.length}`;
+          await new Promise((resolve) => setTimeout(resolve));
+        }
+
+        if (cancelled) {
+          ui.result.textContent = "Création annulée.";
+        } else if (!zipFiles.length) {
+          ui.result.textContent = "Aucun QR code créé. Vérifiez que les contenus ne sont pas trop longs.";
+        } else {
+          const outcome = await saveBlob(QRBatch.makeZip(zipFiles), "qrcodes.zip");
+          const notes = [];
+          if (failed.length) notes.push(`Trop long, ligne${failed.length > 1 ? "s" : ""} ${failed.join(", ")}.`);
+          if (skipped.length) notes.push(`Sans contenu, ligne${skipped.length > 1 ? "s" : ""} ${skipped.join(", ")}.`);
+          const done = outcome === "cancelled" ? "Partage annulé." : `${zipFiles.length} QR code${zipFiles.length > 1 ? "s" : ""} dans qrcodes.zip.`;
+          ui.result.textContent = [done, ...notes].join(" ");
+        }
+      } catch {
+        ui.result.textContent = "Création du ZIP impossible. Réduisez la taille ou le nombre de lignes.";
+      } finally {
+        running = false;
+        ui.progressBox.hidden = true;
+        refresh();
+      }
+    }
+
+    ui.input.addEventListener("change", () => {
+      readFile(ui.input.files[0]);
+      ui.input.value = "";
+    });
+    ["dragenter", "dragover"].forEach((type) => ui.drop.addEventListener(type, (event) => {
+      event.preventDefault();
+      ui.drop.classList.add("is-over");
+    }));
+    ["dragleave", "drop"].forEach((type) => ui.drop.addEventListener(type, (event) => {
+      event.preventDefault();
+      ui.drop.classList.remove("is-over");
+    }));
+    ui.drop.addEventListener("drop", (event) => readFile(event.dataTransfer.files[0]));
+    $("#batch-apply").addEventListener("click", () => {
+      if (!ui.code.value.trim()) return showError("Collez une liste avant de valider.");
+      loadBatch(ui.code.value, "Liste collée");
+    });
+    $("#batch-remove").addEventListener("click", () => {
+      cancelled = true;
+      batch = null;
+      ui.options.hidden = true;
+      ui.drop.hidden = false;
+      ui.pasteBox.hidden = false;
+      ui.result.textContent = "";
+      showError("");
+    });
+    $("#batch-cancel").addEventListener("click", () => { cancelled = true; });
+    ui.header.addEventListener("change", () => {
+      fillColumns();
+      refresh();
+    });
+    [ui.content, ui.fileCol, ui.frameCol].forEach((select) => select.addEventListener("change", refresh));
+    ui.run.addEventListener("click", run);
+    return refresh;
+  }
+
+  /* Position */
+
+  function bindLocate() {
+    const button = $("#locate");
+    const error = $("#locate-error");
+    if (!navigator.geolocation) {
+      button.hidden = true;
+      return;
+    }
+    button.addEventListener("click", () => {
+      error.hidden = true;
+      button.disabled = true;
+      button.textContent = "Recherche de la position";
+      const done = () => {
+        button.disabled = false;
+        button.textContent = "Utiliser ma position";
+      };
+      navigator.geolocation.getCurrentPosition(({ coords }) => {
+        const value = `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
+        state.fields.place = value;
+        $('[data-field="place"]').value = value;
+        done();
+        schedule();
+      }, (failure) => {
+        error.textContent = failure.code === 1
+          ? "Accès à la position refusé. Autorisez-le dans les réglages ou saisissez une adresse."
+          : "Position introuvable. Saisissez une adresse.";
+        error.hidden = false;
+        done();
+      }, { enableHighAccuracy: true, timeout: 10000 });
+    });
+  }
+
+  function showInstallHint() {
+    const ios = /iP(hone|ad|od)/.test(navigator.userAgent)
+      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    $("#install").hidden = !ios || isInstalled();
   }
 
   /* Mobile : onglets et clavier virtuel */
@@ -793,15 +1319,20 @@
 
   /* Démarrage */
 
-  ["type", "dots", "corner", "cornerDot", "gradType", "ec"].forEach(buildChoices);
+  ["type", "dots", "corner", "cornerDot", "frame", "gradType", "ec"].forEach(buildChoices);
   $$("[data-color]").forEach(buildColor);
   buildSwatches();
+  buildFramePresets();
   bindFields();
   bindLogo();
   bindExport();
   bindTabs();
   bindViewport();
+  bindLocate();
+  showInstallHint();
+  refreshBatch = bindBatch();
   $$("[data-field='wifiSec']").forEach((s) => { s.value = state.fields.wifiSec || "WPA"; });
   syncUi();
+  $("#type input:checked")?.closest(".choice").scrollIntoView({ block: "nearest", inline: "center" });
   draw().finally(playEntrance);
 })();

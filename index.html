@@ -8,6 +8,12 @@
   <meta name="description" content="Créez un QR code à votre forme : couleurs, logo SVG et aperçu en direct. Gratuit et sans compte." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%231d2bc4' d='M2 2h9v9H2zm11 0h9v9h-9zM2 13h9v9H2zm11 0h4v4h-4zm5 5h4v4h-4z'/%3E%3C/svg%3E" />
   <link rel="preload" href="vendor/schibsted-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="QR code" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="home.css" />
 </head>
 <body>
@@ -23,5 +29,6 @@
   </main>
   <script src="vendor/qr-code-styling.js"></script>
   <script src="home.js"></script>
+  <script src="pwa.js"></script>
 </body>
 </html>
