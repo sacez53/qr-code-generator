@@ -1,5 +1,5 @@
 // Augmenter ce numéro quand la liste des fichiers change.
-const CACHE = "qr-code-v6";
+const CACHE = "qr-code-v7";
 
 const ASSETS = [
   "./",

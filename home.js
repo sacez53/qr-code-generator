@@ -22,7 +22,9 @@
   for (let r = 0; r < count; r++) {
     for (let c = 0; c < count; c++) {
       if (generator.isDark(r, c) && !inFinder(r, c)) {
-        modules.push({ x: c + QUIET + 0.5, y: r + QUIET + 0.5, order: (r + c) / (2 * count) });
+        // Chaque point a sa profondeur : il flotte plus ou moins quand la carte penche.
+        const depth = 0.35 + ((r * 7 + c * 13) % 11) / 16;
+        modules.push({ x: c + QUIET + 0.5, y: r + QUIET + 0.5, order: (r + c) / (2 * count), depth });
       }
     }
   }
@@ -31,6 +33,7 @@
   let startedAt = 0;
   let frame = 0;
   let pointer = { x: 0, y: 0, power: 0, target: 0 };
+  let drift = { x: 0, y: 0 };
   const ripples = [];
 
   const easeOut = (t) => 1 - (1 - t) ** 3;
@@ -64,7 +67,7 @@
     let amount = 0;
     if (pointer.power > 0) {
       const d = Math.hypot(m.x - pointer.x, m.y - pointer.y);
-      amount = pointer.power * clamp(1 - d / 6);
+      amount = pointer.power * clamp(1 - d / 10);
     }
     for (const ripple of ripples) {
       const t = (now - ripple.at) / RIPPLE_MS;
@@ -95,8 +98,8 @@
       const shape = squareness(m, now);
       const side = unit * grown * (1 - 0.26 * shape);
       const radius = side * (0.28 + 0.22 * shape);
-      const x = m.x * unit - side / 2;
-      const y = m.y * unit - side / 2;
+      const x = (m.x + drift.x * m.depth) * unit - side / 2;
+      const y = (m.y + drift.y * m.depth) * unit - side / 2;
       ctx.moveTo(x + radius, y);
       ctx.roundRect(x, y, side, side, radius);
     }
@@ -199,7 +202,8 @@
 
   const card = canvas.parentElement;
   const hint = document.getElementById("motion-hint");
-  const MAX_TILT = 10;
+  const MAX_TILT = 20;
+  const title = document.querySelector(".home-text");
   const tilt = { x: 0, y: 0, tx: 0, ty: 0 };
   let tiltFrame = 0;
   let neutral = null;
@@ -221,8 +225,14 @@
     card.style.setProperty("--gx", `${(50 + x * 45).toFixed(1)}%`);
     card.style.setProperty("--gy", `${(50 + y * 45).toFixed(1)}%`);
     card.style.setProperty("--glare", strength.toFixed(3));
-    card.style.setProperty("--shx", `${(-x * 18).toFixed(1)}px`);
-    card.style.setProperty("--shy", `${(18 - y * 10).toFixed(1)}px`);
+    card.style.setProperty("--shx", `${(-x * 40).toFixed(1)}px`);
+    card.style.setProperty("--shy", `${(26 - y * 30).toFixed(1)}px`);
+    card.style.setProperty("--lift", `${(strength * 1.04 + (1 - strength)).toFixed(3)}`);
+    // Le texte part dans l'autre sens : effet de profondeur.
+    title.style.setProperty("--px", `${(-x * 16).toFixed(1)}px`);
+    title.style.setProperty("--py", `${(-y * 12).toFixed(1)}px`);
+    // Les points glissent légèrement, sans gêner la lecture.
+    drift = { x: x * 0.22, y: y * 0.22 };
     // Les points s'arrondissent du côté vers lequel on penche.
     pointer.x = total / 2 + x * total * 0.45;
     pointer.y = total / 2 + y * total * 0.45;
@@ -232,8 +242,8 @@
 
   function tiltTick() {
     tiltFrame = 0;
-    tilt.x += (tilt.tx - tilt.x) * 0.12;
-    tilt.y += (tilt.ty - tilt.y) * 0.12;
+    tilt.x += (tilt.tx - tilt.x) * 0.18;
+    tilt.y += (tilt.ty - tilt.y) * 0.18;
     const settled = Math.abs(tilt.tx - tilt.x) < 0.002 && Math.abs(tilt.ty - tilt.y) < 0.002;
     if (settled) {
       tilt.x = tilt.tx;
@@ -257,7 +267,7 @@
     if (!neutral) neutral = { x: dx, y: dy };
     neutral.x += (dx - neutral.x) * 0.01;
     neutral.y += (dy - neutral.y) * 0.01;
-    setTiltTarget((dx - neutral.x) / 22, (dy - neutral.y) / 22);
+    setTiltTarget((dx - neutral.x) / 14, (dy - neutral.y) / 14);
   }
 
   function startMotion() {
@@ -321,6 +331,7 @@
   enter.addEventListener("click", () => {
     tilt.x = tilt.tx = tilt.y = tilt.ty = 0;
     applyTilt();
+    drift = { x: 0, y: 0 };
     pointer.power = pointer.target = 0;
   }, { capture: true });
 

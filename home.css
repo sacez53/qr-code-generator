@@ -68,11 +68,13 @@ body {
 .home-qr canvas { display: block; width: 100%; height: 100%; }
 
 /* Relief de la carte : inclinaison, reflet et ombre */
-.home-qr { position: relative; transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); }
+.home-qr { position: relative; transform: perspective(700px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--lift, 1)); }
+
+.home-text h1, .home-text p { translate: var(--px, 0px) var(--py, 0px); }
 
 .home-qr.is-tilting {
   will-change: transform;
-  box-shadow: var(--shx, 0px) var(--shy, 18px) 50px rgb(5 8 40 / .35);
+  box-shadow: var(--shx, 0px) var(--shy, 26px) 70px rgb(5 8 40 / .5);
 }
 
 .home-qr::after {
@@ -80,7 +82,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%), rgb(255 255 255 / .7), transparent 60%);
+  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%), rgb(255 255 255 / .95), rgb(255 255 255 / .2) 35%, transparent 65%);
   mix-blend-mode: soft-light;
   opacity: var(--glare, 0);
 }
