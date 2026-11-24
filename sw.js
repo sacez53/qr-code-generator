@@ -1,5 +1,5 @@
 // Augmenter ce numéro quand la liste des fichiers change.
-const CACHE = "qr-code-v8";
+const CACHE = "qr-code-v9";
 
 const ASSETS = [
   "./",
@@ -18,6 +18,7 @@ const ASSETS = [
   "manifest.webmanifest",
   "vendor/daisyui.css",
   "vendor/qr-code-styling.js",
+  "vendor/jsqr.js",
   "vendor/font-data.js",
   "vendor/schibsted-grotesk-latin-wght-normal.woff2",
   "icons/apple-touch-icon.png",

@@ -16,6 +16,7 @@ Un site simple pour créer des QR codes personnalisés, avec aperçu en direct. 
 - **Application :** installable sur l'écran d'accueil et utilisable hors ligne.
 - **Couleurs :** palettes, couleurs libres, dégradé linéaire ou radial, coins séparés et fond transparent.
 - **Logo SVG :** import par fichier, glisser-déposer ou code collé, avec réglage de la taille et de l'espace autour.
+- **Test de lecture :** le QR code est relu en direct, avec un badge Lisible, Lecture difficile ou Illisible.
 - **Lisibilité :** alerte en cas de contraste faible ou de couleurs inversées, et choix du niveau de correction d'erreur.
 - **Export :** PNG, JPEG et WebP jusqu'à 4096 px, ou SVG.
 - **Mobile :** interface à onglets adaptée au tactile, au mode paysage et au clavier virtuel.
@@ -83,5 +84,6 @@ Les réglages et le logo sont conservés dans le `localStorage` du navigateur po
 
 - HTML, CSS et JavaScript, sans framework
 - [daisyUI](https://daisyui.com) 5.7.50 (licence MIT), copié dans `vendor/daisyui.css` avec seulement les composants utilisés, sans compilation
+- [jsQR](https://github.com/cozmo/jsQR) 1.4.0 (licence Apache 2.0), pour le test de lecture
 - [qr-code-styling](https://github.com/kozakdenys/qr-code-styling) 1.9.2 (licence MIT)
 - [Schibsted Grotesk](https://fontsource.org/fonts/schibsted-grotesk) (licence SIL OFL 1.1)

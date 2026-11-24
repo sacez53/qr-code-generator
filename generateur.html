@@ -58,7 +58,10 @@
         <p class="empty" id="empty" hidden></p>
       </div>
     </div>
-    <p class="status" id="status" role="status"></p>
+    <div class="stage-foot">
+      <span class="badge scan-badge" id="scan-badge" role="status" hidden></span>
+      <p class="status" id="status" role="status"></p>
+    </div>
   </main>
 
   <form class="panel" id="form" autocomplete="off">
@@ -394,6 +397,7 @@
 
 
   <script src="vendor/qr-code-styling.js"></script>
+  <script src="vendor/jsqr.js"></script>
   <script src="vendor/font-data.js"></script>
   <script src="batch.js"></script>
   <script src="print.js"></script>

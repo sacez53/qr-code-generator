@@ -570,6 +570,109 @@
     return blob;
   }
 
+  /* Test de lecture : l'aperçu est relu comme le ferait un téléphone */
+
+  const scanCanvas = document.createElement("canvas");
+  const scanContext = scanCanvas.getContext("2d", { willReadFrequently: true });
+  const scanBadge = $("#scan-badge");
+  let scanTimer = 0;
+  let scanToken = 0;
+  let scanState = "";
+
+  const BADGES = {
+    checking: ["badge-ghost", '<span class="loading loading-spinner loading-xs"></span>', "Vérification"],
+    ok: ["badge-success", '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>', "Lisible"],
+    hard: ["badge-warning", '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v6M12 16.5v.5"/></svg>', "Lecture difficile"],
+    fail: ["badge-error", '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>', "Illisible"],
+  };
+
+  function setBadge(name) {
+    scanState = name;
+    scanBadge.hidden = !name;
+    if (!name) return;
+    const [kind, icon, label] = BADGES[name];
+    scanBadge.className = `badge scan-badge ${kind}`;
+    scanBadge.innerHTML = `${icon}<span>${label}</span>`;
+    if (name !== "checking" && !reduceMotion()) {
+      scanBadge.animate([{ transform: "scale(.85)", opacity: 0.4 }, { transform: "none", opacity: 1 }], { duration: 220, easing: EASE });
+    }
+  }
+
+  // Relit l'aperçu à une taille donnée, sur fond blanc comme une impression.
+  // Une marge blanche et un léger flou imitent une photo prise par un téléphone.
+  function readAt(size, inversionAttempts = "dontInvert", blur = false, margin = 0.05) {
+    const source = el.preview;
+    const pad = Math.round(size * margin);
+    const height = Math.round((size * source.height) / source.width);
+    scanCanvas.width = size + 2 * pad;
+    scanCanvas.height = height + 2 * pad;
+    scanContext.filter = "none";
+    scanContext.fillStyle = "#ffffff";
+    scanContext.fillRect(0, 0, scanCanvas.width, scanCanvas.height);
+    if (blur) scanContext.filter = "blur(1px)";
+    scanContext.drawImage(source, pad, pad, size, height);
+    scanContext.filter = "none";
+    const image = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+    try {
+      const result = jsQR(image.data, image.width, image.height, { inversionAttempts });
+      return result ? new TextDecoder().decode(new Uint8Array(result.binaryData)) : null;
+    } catch {
+      return null; // Le lecteur échoue parfois sur une image sans QR code exploitable.
+    }
+  }
+
+  const pause = () => new Promise((resolve) => setTimeout(resolve));
+
+  // Le lecteur intégré est plus exigeant qu'un téléphone : plusieurs tailles sont
+  // essayées, une seule lecture réussie suffit. Une pause entre chaque essai garde
+  // l'interface fluide.
+  async function runScan(token) {
+    if (token !== scanToken || !currentData) return;
+    if (typeof jsQR !== "function") return setBadge("");
+    let result = "fail";
+    const attempts = [
+      [360], [360, true], [360, true, 0], [280], [480, true, 0], [480, true],
+      [640, false, 0.1], [640, true], [280, true, 0], [800, false, 0], [520, false, 0],
+    ];
+    for (const [size, blur = false, margin = 0.05] of attempts) {
+      await pause();
+      if (token !== scanToken) return;
+      if (readAt(size, "dontInvert", blur, margin) === currentData) {
+        result = scanWarning() ? "hard" : "ok";
+        break;
+      }
+    }
+    if (result === "fail") {
+      for (const size of [360, 560]) {
+        await pause();
+        if (token !== scanToken) return;
+        if (readAt(size, "onlyInvert", true) === currentData) {
+          result = "hard";
+          break;
+        }
+      }
+    }
+    if (token !== scanToken) return;
+    setBadge(result);
+    if (!scanWarning()) {
+      if (result === "fail") setStatus("Illisible : augmentez le contraste, réduisez le logo ou simplifiez les formes.", "error");
+      if (result === "hard") setStatus("Lecture difficile : imprimez-le assez grand et gardez un bon contraste.");
+    }
+  }
+
+  function scheduleScan() {
+    clearTimeout(scanTimer);
+    const token = ++scanToken;
+    setBadge("checking");
+    scanTimer = setTimeout(() => runScan(token), 220);
+  }
+
+  function cancelScan() {
+    clearTimeout(scanTimer);
+    scanToken += 1;
+    setBadge("");
+  }
+
   /* Rendu */
 
   function schedule() {
@@ -601,6 +704,7 @@
     el.empty.hidden = false;
     el.empty.textContent = message;
     setStatus(isError ? "QR code non généré." : "", "error");
+    cancelScan();
     setReady(false);
   }
 
@@ -631,6 +735,7 @@
       currentData = data;
       setStatus(scanWarning());
       setReady(true);
+      scheduleScan();
       // Petit rebond quand un réglage visuel change.
       if (popNext && !reduceMotion()) {
         el.sticker.animate([{ transform: "scale(.95)" }, { transform: "none" }], { duration: 320, easing: "cubic-bezier(.34, 1.56, .64, 1)" });
@@ -1014,6 +1119,7 @@
       el.download.prepend(spinner);
       try {
         const blob = await exportBlob(state.format, state.size);
+        if (scanState === "fail") toast("Attention : ce QR code semble illisible.", "warning");
         const outcome = await saveBlob(blob, `qrcode.${state.format === "jpeg" ? "jpg" : state.format}`);
         if (outcome === "downloaded") flash("QR code téléchargé.");
         if (outcome === "shared") flash("QR code partagé.");
@@ -1558,7 +1664,7 @@
       ], motion),
       ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, delay: 170, easing: "linear", fill: "both" }),
       el.form.animate([{ transform: sheet }, { transform: "none" }], motion),
-      ...[$(".stage-head"), el.status].map((node) => node.animate(
+      ...[$(".stage-head"), $(".stage-foot")].map((node) => node.animate(
         [{ opacity: 0 }, { opacity: 1 }],
         { duration: 240, delay: 220, easing: "linear", fill: "backwards" },
       )),
