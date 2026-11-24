@@ -75,5 +75,6 @@ Les réglages et le logo sont conservés dans le `localStorage` du navigateur po
 ## Technologies
 
 - HTML, CSS et JavaScript, sans framework
+- [daisyUI](https://daisyui.com) 5.7.50 (licence MIT), copié dans `vendor/daisyui.css` avec seulement les composants utilisés, sans compilation
 - [qr-code-styling](https://github.com/kozakdenys/qr-code-styling) 1.9.2 (licence MIT)
 - [Schibsted Grotesk](https://fontsource.org/fonts/schibsted-grotesk) (licence SIL OFL 1.1)

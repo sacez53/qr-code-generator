@@ -1,5 +1,5 @@
 // Augmenter ce numéro quand la liste des fichiers change.
-const CACHE = "qr-code-v1";
+const CACHE = "qr-code-v2";
 
 const ASSETS = [
   "./",
@@ -12,6 +12,7 @@ const ASSETS = [
   "batch.js",
   "pwa.js",
   "manifest.webmanifest",
+  "vendor/daisyui.css",
   "vendor/qr-code-styling.js",
   "vendor/font-data.js",
   "vendor/schibsted-grotesk-latin-wght-normal.woff2",

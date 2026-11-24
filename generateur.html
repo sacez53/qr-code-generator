@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="qr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
@@ -28,13 +28,14 @@
       } catch (error) { /* navigation normale */ }
     })();
   </script>
+  <link rel="stylesheet" href="vendor/daisyui.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="stage" aria-label="Aperçu">
     <div class="stage-head">
       <h1><a href="index.html" title="Retour à l'accueil" aria-label="Générateur de QR code, retour à l'accueil"><span class="title-prefix">Générateur de </span>QR code</a></h1>
-      <button class="quick" type="button" id="quick-download">Télécharger</button>
+      <button class="btn btn-sm quick" type="button" id="quick-download">Télécharger</button>
     </div>
     <div class="sticker-wrap">
       <div class="sticker" id="sticker">
@@ -52,23 +53,23 @@
 
       <div class="stack" style="margin-top:14px">
         <div class="stack" data-type="url">
-          <label class="field"><span>Adresse du site</span>
-            <input type="url" data-field="url" inputmode="url" placeholder="exemple.fr" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Adresse du site</span>
+            <input class="input" type="url" data-field="url" inputmode="url" placeholder="exemple.fr" /></label>
         </div>
 
         <div class="stack" data-type="text" hidden>
-          <label class="field"><span>Texte</span>
-            <textarea data-field="text" rows="3"></textarea></label>
+          <label class="fieldset"><span class="fieldset-legend">Texte</span>
+            <textarea class="textarea" data-field="text" rows="3"></textarea></label>
         </div>
 
         <div class="stack" data-type="wifi" hidden>
-          <label class="field"><span>Nom du réseau</span>
-            <input type="text" data-field="ssid" /></label>
-          <label class="field"><span>Mot de passe</span>
-            <input type="password" data-field="wifiPass" autocomplete="new-password" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Nom du réseau</span>
+            <input class="input" type="text" data-field="ssid" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Mot de passe</span>
+            <input class="input" type="password" data-field="wifiPass" autocomplete="new-password" /></label>
           <div class="two">
-            <label class="field"><span>Sécurité</span>
-              <select data-field="wifiSec">
+            <label class="fieldset"><span class="fieldset-legend">Sécurité</span>
+              <select class="select" data-field="wifiSec">
                 <option value="WPA">WPA / WPA2 / WPA3</option>
                 <option value="WEP">WEP</option>
                 <option value="nopass">Aucune</option>
@@ -79,73 +80,73 @@
         </div>
 
         <div class="stack" data-type="email" hidden>
-          <label class="field"><span>Destinataire</span>
-            <input type="email" data-field="mailTo" placeholder="nom@exemple.fr" /></label>
-          <label class="field"><span>Objet</span>
-            <input type="text" data-field="mailSubject" /></label>
-          <label class="field"><span>Message</span>
-            <textarea data-field="mailBody" rows="3"></textarea></label>
+          <label class="fieldset"><span class="fieldset-legend">Destinataire</span>
+            <input class="input" type="email" data-field="mailTo" placeholder="nom@exemple.fr" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Objet</span>
+            <input class="input" type="text" data-field="mailSubject" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Message</span>
+            <textarea class="textarea" data-field="mailBody" rows="3"></textarea></label>
         </div>
 
         <div class="stack" data-type="tel" hidden>
-          <label class="field"><span>Numéro de téléphone</span>
-            <input type="tel" data-field="tel" placeholder="+33 6 12 34 56 78" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Numéro de téléphone</span>
+            <input class="input" type="tel" data-field="tel" placeholder="+33 6 12 34 56 78" /></label>
         </div>
 
         <div class="stack" data-type="contact" hidden>
           <div class="two">
-            <label class="field"><span>Prénom</span><input type="text" data-field="firstName" /></label>
-            <label class="field"><span>Nom</span><input type="text" data-field="lastName" /></label>
+            <label class="fieldset"><span class="fieldset-legend">Prénom</span><input class="input" type="text" data-field="firstName" /></label>
+            <label class="fieldset"><span class="fieldset-legend">Nom</span><input class="input" type="text" data-field="lastName" /></label>
           </div>
-          <label class="field"><span>Téléphone</span><input type="tel" data-field="cTel" /></label>
-          <label class="field"><span>E-mail</span><input type="email" data-field="cMail" /></label>
-          <label class="field"><span>Entreprise</span><input type="text" data-field="cOrg" /></label>
-          <label class="field"><span>Site web</span><input type="url" data-field="cUrl" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Téléphone</span><input class="input" type="tel" data-field="cTel" /></label>
+          <label class="fieldset"><span class="fieldset-legend">E-mail</span><input class="input" type="email" data-field="cMail" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Entreprise</span><input class="input" type="text" data-field="cOrg" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Site web</span><input class="input" type="url" data-field="cUrl" /></label>
         </div>
 
         <div class="stack" data-type="sms" hidden>
-          <label class="field"><span>Numéro du destinataire</span>
-            <input type="tel" data-field="smsTo" placeholder="+33 6 12 34 56 78" /></label>
-          <label class="field"><span>Message</span>
-            <textarea data-field="smsBody" rows="3"></textarea></label>
+          <label class="fieldset"><span class="fieldset-legend">Numéro du destinataire</span>
+            <input class="input" type="tel" data-field="smsTo" placeholder="+33 6 12 34 56 78" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Message</span>
+            <textarea class="textarea" data-field="smsBody" rows="3"></textarea></label>
         </div>
 
         <div class="stack" data-type="whatsapp" hidden>
-          <label class="field"><span>Numéro WhatsApp</span>
-            <input type="tel" data-field="waTo" placeholder="+33 6 12 34 56 78" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Numéro WhatsApp</span>
+            <input class="input" type="tel" data-field="waTo" placeholder="+33 6 12 34 56 78" /></label>
           <p class="hint">Un numéro commençant par 0 est traité comme un numéro français.</p>
-          <label class="field"><span>Message prérempli</span>
-            <textarea data-field="waBody" rows="3"></textarea></label>
+          <label class="fieldset"><span class="fieldset-legend">Message prérempli</span>
+            <textarea class="textarea" data-field="waBody" rows="3"></textarea></label>
         </div>
 
         <div class="stack" data-type="event" hidden>
-          <label class="field"><span>Titre de l'événement</span>
-            <input type="text" data-field="evTitle" /></label>
-          <label class="field"><span>Début</span>
-            <input type="datetime-local" data-field="evStart" /></label>
-          <label class="field"><span>Fin</span>
-            <input type="datetime-local" data-field="evEnd" /></label>
-          <label class="field"><span>Lieu</span>
-            <input type="text" data-field="evPlace" /></label>
-          <label class="field"><span>Description</span>
-            <textarea data-field="evNotes" rows="2"></textarea></label>
+          <label class="fieldset"><span class="fieldset-legend">Titre de l'événement</span>
+            <input class="input" type="text" data-field="evTitle" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Début</span>
+            <input class="input" type="datetime-local" data-field="evStart" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Fin</span>
+            <input class="input" type="datetime-local" data-field="evEnd" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Lieu</span>
+            <input class="input" type="text" data-field="evPlace" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Description</span>
+            <textarea class="textarea" data-field="evNotes" rows="2"></textarea></label>
         </div>
 
         <div class="stack" data-type="place" hidden>
-          <label class="field"><span>Adresse ou coordonnées</span>
-            <input type="text" data-field="place" placeholder="10 rue de la Paix, Paris" /></label>
-          <button class="btn" type="button" id="locate">Utiliser ma position</button>
-          <p class="error" id="locate-error" role="alert" hidden></p>
-          <label class="field"><span>Ouvrir dans</span>
-            <select data-field="mapApp">
+          <label class="fieldset"><span class="fieldset-legend">Adresse ou coordonnées</span>
+            <input class="input" type="text" data-field="place" placeholder="10 rue de la Paix, Paris" /></label>
+          <button class="btn btn-outline" type="button" id="locate">Utiliser ma position</button>
+          <p class="alert alert-error alert-soft" id="locate-error" role="alert" hidden></p>
+          <label class="fieldset"><span class="fieldset-legend">Ouvrir dans</span>
+            <select class="select" data-field="mapApp">
               <option value="google">Google Maps</option>
               <option value="apple">Plans (Apple)</option>
             </select></label>
         </div>
 
         <div class="stack" data-type="social" hidden>
-          <label class="field"><span>Réseau</span>
-            <select data-field="socialNet">
+          <label class="fieldset"><span class="fieldset-legend">Réseau</span>
+            <select class="select" data-field="socialNet">
               <option value="instagram">Instagram</option>
               <option value="tiktok">TikTok</option>
               <option value="youtube">YouTube</option>
@@ -157,8 +158,8 @@
               <option value="twitch">Twitch</option>
               <option value="github">GitHub</option>
             </select></label>
-          <label class="field"><span>Nom d'utilisateur</span>
-            <input type="text" data-field="socialUser" autocapitalize="none" spellcheck="false" placeholder="monprofil" /></label>
+          <label class="fieldset"><span class="fieldset-legend">Nom d'utilisateur</span>
+            <input class="input" type="text" data-field="socialUser" autocapitalize="none" spellcheck="false" placeholder="monprofil" /></label>
         </div>
       </div>
     </section>
@@ -178,20 +179,20 @@
       <div class="swatches" id="swatches"></div>
       <div class="stack">
         <div class="color" data-color="fg"><span>Points</span></div>
-        <label class="check"><input type="checkbox" data-key="gradient" /> Dégradé</label>
+        <label class="check"><input class="toggle toggle-primary" type="checkbox" data-key="gradient" /> Dégradé</label>
         <div class="stack" id="gradient-options" hidden>
           <div class="color" data-color="fg2"><span>Seconde couleur</span></div>
           <div class="choices" id="gradType" role="radiogroup" aria-label="Type de dégradé"></div>
-          <label class="range" id="angle-row"><span>Angle</span><output data-for="gradAngle"></output>
-            <input type="range" data-key="gradAngle" min="0" max="360" step="5" /></label>
+          <label class="slider" id="angle-row"><span>Angle</span><output data-for="gradAngle"></output>
+            <input class="range range-primary range-sm" type="range" data-key="gradAngle" min="0" max="360" step="5" /></label>
         </div>
-        <label class="check"><input type="checkbox" data-key="linked" /> Coins de la même couleur</label>
+        <label class="check"><input class="toggle toggle-primary" type="checkbox" data-key="linked" /> Coins de la même couleur</label>
         <div class="stack" id="corner-colors" hidden>
           <div class="color" data-color="cornerColor"><span>Contour des coins</span></div>
           <div class="color" data-color="cornerDotColor"><span>Centre des coins</span></div>
         </div>
         <div class="color" data-color="bg" id="bg-row"><span>Fond</span></div>
-        <label class="check"><input type="checkbox" data-key="transparent" /> Fond transparent</label>
+        <label class="check"><input class="toggle toggle-primary" type="checkbox" data-key="transparent" /> Fond transparent</label>
       </div>
     </section>
 
@@ -199,12 +200,12 @@
       <h2>Cadre</h2>
       <div class="choices" id="frame" role="radiogroup" aria-label="Style du cadre"></div>
       <div class="stack" id="frame-options" style="margin-top:14px" hidden>
-        <label class="field"><span>Texte du cadre</span>
-          <input type="text" data-key="frameText" maxlength="40" /></label>
+        <label class="fieldset"><span class="fieldset-legend">Texte du cadre</span>
+          <input class="input" type="text" data-key="frameText" maxlength="40" /></label>
         <div class="chips" id="frame-presets" aria-label="Textes proposés"></div>
-        <label class="range"><span>Taille du texte</span><output data-for="frameTextSize"></output>
-          <input type="range" data-key="frameTextSize" min="60" max="130" step="5" /></label>
-        <label class="check"><input type="checkbox" data-key="frameLinked" /> Cadre de la couleur des points</label>
+        <label class="slider"><span>Taille du texte</span><output data-for="frameTextSize"></output>
+          <input class="range range-primary range-sm" type="range" data-key="frameTextSize" min="60" max="130" step="5" /></label>
+        <label class="check"><input class="toggle toggle-primary" type="checkbox" data-key="frameLinked" /> Cadre de la couleur des points</label>
         <div class="stack" id="frame-colors" hidden>
           <div class="color" data-color="frameColor"><span>Cadre</span></div>
           <div class="color" data-color="frameTextColor"><span>Texte</span></div>
@@ -215,32 +216,31 @@
     <section class="group keep-title with-rule" data-tab="logo">
       <h2>Logo</h2>
       <div class="stack">
-        <label class="drop" id="drop">
-          <input class="sr-only" type="file" id="logo-input" accept=".svg,image/svg+xml" />
-          <span class="for-mouse">Déposez un fichier SVG ou cliquez pour le choisir</span>
-          <span class="for-touch">Choisir un fichier SVG</span>
-        </label>
+        <label class="fieldset drop" id="drop"><span class="fieldset-legend">Fichier SVG</span>
+          <input class="file-input" type="file" id="logo-input" accept=".svg,image/svg+xml" /></label>
 
         <div class="logo-file" id="logo-file" hidden>
           <img id="logo-thumb" alt="Logo importé" />
           <p id="logo-name"></p>
-          <button class="btn" type="button" id="logo-remove">Retirer</button>
+          <button class="btn btn-outline btn-sm" type="button" id="logo-remove">Retirer</button>
         </div>
 
-        <p class="error" id="logo-error" role="alert" hidden></p>
+        <p class="alert alert-error alert-soft" id="logo-error" role="alert" hidden></p>
 
-        <details class="paste" id="paste-box">
-          <summary>Coller le code SVG</summary>
-          <textarea id="logo-code" rows="4" spellcheck="false" aria-label="Code SVG" placeholder="<svg ...>...</svg>"></textarea>
-          <button class="btn" type="button" id="logo-apply">Utiliser ce code</button>
+<details class="collapse collapse-arrow paste" id="paste-box">
+          <summary class="collapse-title">Coller le code SVG</summary>
+          <div class="collapse-content">
+            <textarea class="textarea" id="logo-code" rows="4" spellcheck="false" aria-label="Code SVG" placeholder="<svg ...>...</svg>"></textarea>
+            <button class="btn btn-outline" type="button" id="logo-apply">Utiliser ce code</button>
+          </div>
         </details>
 
         <div class="stack" id="logo-options" hidden>
-          <label class="range"><span>Taille du logo</span><output data-for="logoSize"></output>
-            <input type="range" data-key="logoSize" min="0.1" max="0.45" step="0.01" /></label>
-          <label class="range"><span>Espace autour du logo</span><output data-for="logoMargin"></output>
-            <input type="range" data-key="logoMargin" min="0" max="30" step="1" /></label>
-          <label class="check"><input type="checkbox" data-key="hideDots" /> Masquer les points derrière le logo</label>
+          <label class="slider"><span>Taille du logo</span><output data-for="logoSize"></output>
+            <input class="range range-primary range-sm" type="range" data-key="logoSize" min="0.1" max="0.45" step="0.01" /></label>
+          <label class="slider"><span>Espace autour du logo</span><output data-for="logoMargin"></output>
+            <input class="range range-primary range-sm" type="range" data-key="logoMargin" min="0" max="30" step="1" /></label>
+          <label class="check"><input class="toggle toggle-primary" type="checkbox" data-key="hideDots" /> Masquer les points derrière le logo</label>
         </div>
       </div>
     </section>
@@ -248,8 +248,8 @@
     <section class="group" data-tab="export">
       <h2>Réglages</h2>
       <div class="stack">
-        <label class="range"><span>Marge</span><output data-for="margin"></output>
-          <input type="range" data-key="margin" min="0" max="120" step="4" /></label>
+        <label class="slider"><span>Marge</span><output data-for="margin"></output>
+          <input class="range range-primary range-sm" type="range" data-key="margin" min="0" max="120" step="4" /></label>
         <div>
           <h3 id="l-ec">Résistance aux dégâts</h3>
           <div class="choices" id="ec" role="radiogroup" aria-labelledby="l-ec"></div>
@@ -261,32 +261,31 @@
       <h2>Création en lot</h2>
       <div class="stack">
         <p class="hint">Importez un fichier CSV avec une ligne par QR code. Le style, le format et la taille actuels sont appliqués à tout le lot.</p>
-        <label class="drop" id="batch-drop">
-          <input class="sr-only" type="file" id="batch-input" accept=".csv,.txt,.tsv,text/csv,text/plain" />
-          <span class="for-mouse">Déposez un fichier CSV ou cliquez pour le choisir</span>
-          <span class="for-touch">Choisir un fichier CSV</span>
-        </label>
-        <details class="paste" id="batch-paste-box">
-          <summary>Coller une liste</summary>
-          <textarea id="batch-code" rows="4" spellcheck="false" aria-label="Liste à importer" placeholder="https://exemple.fr/page-1&#10;https://exemple.fr/page-2"></textarea>
-          <button class="btn" type="button" id="batch-apply">Utiliser cette liste</button>
+        <label class="fieldset drop" id="batch-drop"><span class="fieldset-legend">Fichier CSV</span>
+          <input class="file-input" type="file" id="batch-input" accept=".csv,.txt,.tsv,text/csv,text/plain" /></label>
+<details class="collapse collapse-arrow paste" id="batch-paste-box">
+          <summary class="collapse-title">Coller une liste</summary>
+          <div class="collapse-content">
+            <textarea class="textarea" id="batch-code" rows="4" spellcheck="false" aria-label="Liste à importer" placeholder="https://exemple.fr/page-1&#10;https://exemple.fr/page-2"></textarea>
+            <button class="btn btn-outline" type="button" id="batch-apply">Utiliser cette liste</button>
+          </div>
         </details>
-        <p class="error" id="batch-error" role="alert" hidden></p>
+        <p class="alert alert-error alert-soft" id="batch-error" role="alert" hidden></p>
 
         <div class="stack" id="batch-options" hidden>
           <div class="batch-file">
             <p id="batch-name"></p>
-            <button class="btn" type="button" id="batch-remove">Retirer</button>
+            <button class="btn btn-outline btn-sm" type="button" id="batch-remove">Retirer</button>
           </div>
-          <label class="check"><input type="checkbox" id="batch-header" /> La première ligne contient les titres</label>
-          <label class="field"><span>Contenu du QR code</span><select id="batch-content"></select></label>
-          <label class="field"><span>Nom des fichiers</span><select id="batch-file-col"></select></label>
-          <label class="field" id="batch-frame-field" hidden><span>Texte du cadre</span><select id="batch-frame-col"></select></label>
-          <ol class="batch-preview" id="batch-preview" aria-label="Aperçu des premières lignes"></ol>
+          <label class="check"><input class="toggle toggle-primary" type="checkbox" id="batch-header" /> La première ligne contient les titres</label>
+          <label class="fieldset"><span class="fieldset-legend">Contenu du QR code</span><select class="select" id="batch-content"></select></label>
+          <label class="fieldset"><span class="fieldset-legend">Nom des fichiers</span><select class="select" id="batch-file-col"></select></label>
+          <label class="fieldset" id="batch-frame-field" hidden><span class="fieldset-legend">Texte du cadre</span><select class="select" id="batch-frame-col"></select></label>
+          <ul class="list rounded-box batch-preview" id="batch-preview" aria-label="Aperçu des premières lignes"></ul>
           <button class="btn btn-primary" type="button" id="batch-run">Créer le ZIP</button>
           <div class="stack" id="batch-progress-box" hidden>
-            <progress id="batch-progress" max="1" value="0" aria-label="Progression"></progress>
-            <button class="btn" type="button" id="batch-cancel">Annuler</button>
+            <progress class="progress progress-primary" id="batch-progress" max="1" value="0" aria-label="Progression"></progress>
+            <button class="btn btn-outline" type="button" id="batch-cancel">Annuler</button>
           </div>
           <p class="hint" id="batch-result" role="status"></p>
         </div>
@@ -295,37 +294,37 @@
 
     <section class="group keep-title with-rule" id="install" data-tab="export" hidden>
       <h2>Installer l'application</h2>
-      <p class="hint">Dans Safari, touchez Partager, puis « Sur l'écran d'accueil ».</p>
+      <div class="alert alert-info alert-soft" role="note">Dans Safari, touchez Partager, puis « Sur l'écran d'accueil ».</div>
     </section>
 
-    <button class="btn reset" type="button" id="reset" data-tab="export">Réinitialiser</button>
+    <button class="btn btn-ghost reset" type="button" id="reset" data-tab="export">Réinitialiser</button>
 
     <section class="export" id="export" data-tab="export" aria-label="Téléchargement">
-      <label class="field"><span class="sr-only">Format</span>
-        <select data-key="format">
+      <label class="fieldset"><span class="sr-only">Format</span>
+        <select class="select" data-key="format">
           <option value="png">PNG</option>
           <option value="svg">SVG</option>
           <option value="jpeg">JPEG</option>
           <option value="webp">WebP</option>
         </select></label>
-      <label class="field" id="size-field"><span class="sr-only">Dimensions</span>
-        <select data-key="size">
+      <label class="fieldset" id="size-field"><span class="sr-only">Dimensions</span>
+        <select class="select" data-key="size">
           <option value="512">512 px</option>
           <option value="1024">1024 px</option>
           <option value="2048">2048 px</option>
           <option value="4096">4096 px</option>
         </select></label>
       <button class="btn btn-primary" type="button" id="download">Télécharger</button>
-      <button class="btn" type="button" id="copy" hidden>Copier l'image</button>
+      <button class="btn btn-outline" type="button" id="copy" hidden>Copier l'image</button>
     </section>
   </form>
 
-  <nav class="tabs" aria-label="Réglages du QR code">
-    <button type="button" data-tab-button="content" aria-current="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"/></svg><span>Contenu</span></button>
-    <button type="button" data-tab-button="shapes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM17.5 4a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zM4 14h7v6H4zM14 14h6v6h-6z"/></svg><span>Formes</span></button>
-    <button type="button" data-tab-button="colors"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s7 7 7 11.5a7 7 0 0 1-14 0C5 10 12 3 12 3z"/></svg><span>Couleurs</span></button>
-    <button type="button" data-tab-button="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM8 8h8v5H8zM8 16.5h8"/></svg><span>Habillage</span></button>
-    <button type="button" data-tab-button="export"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 11 12 15.5 16.5 11M5 20h14"/></svg><span>Exporter</span></button>
+  <nav class="dock tabs" aria-label="Réglages du QR code">
+    <button type="button" data-tab-button="content" aria-current="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"/></svg><span class="dock-label">Contenu</span></button>
+    <button type="button" data-tab-button="shapes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM17.5 4a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zM4 14h7v6H4zM14 14h6v6h-6z"/></svg><span class="dock-label">Formes</span></button>
+    <button type="button" data-tab-button="colors"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s7 7 7 11.5a7 7 0 0 1-14 0C5 10 12 3 12 3z"/></svg><span class="dock-label">Couleurs</span></button>
+    <button type="button" data-tab-button="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM8 8h8v5H8zM8 16.5h8"/></svg><span class="dock-label">Habillage</span></button>
+    <button type="button" data-tab-button="export"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 11 12 15.5 16.5 11M5 20h14"/></svg><span class="dock-label">Exporter</span></button>
   </nav>
 
   <script src="vendor/qr-code-styling.js"></script>

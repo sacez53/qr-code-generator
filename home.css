@@ -5,7 +5,15 @@
   font-display: swap;
 }
 
-:root {
+[data-theme="qr"] {
+  color-scheme: light;
+  --color-base-100: #1d2bc4;
+  --color-base-content: #ffffff;
+  --radius-field: .5rem;
+  --size-field: .25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
   --blue: #1d2bc4;
   --white: #ffffff;
   --ink: #15182e;
@@ -67,26 +75,23 @@ p {
 }
 
 .enter {
-  display: inline-grid;
-  place-items: center;
+  --btn-color: var(--white);
+  --btn-fg: var(--blue);
+  --btn-shadow: none;
   min-width: 200px;
-  min-height: 60px;
-  padding: 0 40px;
-  border-radius: 6px;
-  background: var(--white);
-  color: var(--blue);
+  height: 60px;
+  padding-inline: 40px;
+  border: 0;
   font-size: 20px;
   font-weight: 700;
-  text-decoration: none;
-  transition: background-color .12s linear, color .12s linear;
 }
 
 .enter:focus-visible { outline: 3px solid var(--white); outline-offset: 3px; }
 
-.enter:active { background: var(--ink); color: var(--white); }
+.enter:active { --btn-color: var(--ink); --btn-fg: var(--white); }
 
 @media (hover: hover) {
-  .enter:hover { background: var(--ink); color: var(--white); }
+  .enter:hover { --btn-color: var(--ink); --btn-fg: var(--white); }
 }
 
 /* Téléphone et tablette en portrait : QR en haut, action sous le pouce */
@@ -128,7 +133,7 @@ p {
 
   p { margin: 8px 0 14px; font-size: 15px; line-height: 1.35; }
 
-  .enter { min-height: 52px; }
+  .enter { height: 52px; }
 }
 
 /* Téléphone à l'horizontale */
@@ -146,7 +151,7 @@ p {
 
   p { margin: 8px 0 14px; font-size: 15px; line-height: 1.35; }
 
-  .enter { min-height: 48px; min-width: 180px; font-size: 18px; }
+  .enter { height: 48px; min-width: 180px; font-size: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

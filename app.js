@@ -610,21 +610,20 @@
     const root = $(`#${key}`);
     root.replaceChildren(...OPTIONS[key].map(([value, label, icon]) => {
       const wrap = document.createElement("label");
-      wrap.className = "choice";
+      wrap.className = "btn choice";
       wrap.title = label;
       const input = document.createElement("input");
       input.type = "radio";
       input.name = key;
       input.value = value;
-      const face = document.createElement("span");
+      wrap.append(input);
       if (icon) {
         input.setAttribute("aria-label", label);
-        face.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg><small>${label}</small>`;
+        wrap.insertAdjacentHTML("beforeend", `<svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg><small>${label}</small>`);
         wrap.classList.add("has-icon");
       } else {
-        face.textContent = label;
+        wrap.append(label);
       }
-      wrap.append(input, face);
       input.addEventListener("change", () => {
         state[key] = value;
         schedule();
@@ -638,13 +637,18 @@
     const name = $("span", row).textContent;
     const picker = document.createElement("input");
     picker.type = "color";
+    picker.className = "picker join-item";
     picker.setAttribute("aria-label", `${name} : sélecteur`);
     const hex = document.createElement("input");
     hex.type = "text";
+    hex.className = "input join-item";
     hex.maxLength = 7;
     hex.spellcheck = false;
     hex.setAttribute("aria-label", `${name} : code hexadécimal`);
-    row.append(picker, hex);
+    const join = document.createElement("div");
+    join.className = "join";
+    join.append(picker, hex);
+    row.append(join);
 
     picker.addEventListener("input", () => {
       state[key] = picker.value;
@@ -768,7 +772,7 @@
     $("#frame-presets").replaceChildren(...FRAME_PRESETS.map((label) => {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "chip";
+      button.className = "btn btn-sm btn-outline";
       button.textContent = label;
       button.addEventListener("click", () => {
         state.frameText = label;
@@ -1043,6 +1047,7 @@
       ui.name.textContent = `${batch.name}, ${usable} QR code${usable > 1 ? "s" : ""}`;
       ui.preview.replaceChildren(...list.filter((entry) => entry.data).slice(0, 3).map((entry) => {
         const item = document.createElement("li");
+        item.className = "list-row";
         const name = document.createElement("strong");
         name.textContent = entry.base;
         const value = document.createElement("span");
