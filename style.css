@@ -666,3 +666,42 @@ body {
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .swatch:hover { scale: 1.08; }
 }
+
+/* Modèles Instagram */
+.template-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+
+.template {
+  overflow: hidden;
+  padding: 0;
+  border-color: var(--line);
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  text-align: left;
+  cursor: pointer;
+}
+
+.template figure { background: #fff; }
+
+.template img { width: 100%; height: auto; aspect-ratio: 5 / 6; object-fit: contain; }
+
+.template .card-body { padding: 8px 10px 10px; }
+
+.template .card-title { font-size: 14px; font-weight: 600; }
+
+.template:focus-visible { outline: 2px solid var(--color-base-content); outline-offset: 2px; }
+
+@media (hover: hover) {
+  .template:hover { border-color: var(--color-base-content); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .template { transition: border-color .15s ease, scale .12s ease; }
+
+  .template:active { scale: .97; }
+}
+
+.panel > #print { order: 2; }
+
+#print-summary:empty { display: none; }
+
+#printLayout .choice { white-space: nowrap; }

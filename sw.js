@@ -1,5 +1,5 @@
 // Augmenter ce numéro quand la liste des fichiers change.
-const CACHE = "qr-code-v7";
+const CACHE = "qr-code-v8";
 
 const ASSETS = [
   "./",
@@ -10,6 +10,10 @@ const ASSETS = [
   "style.css",
   "app.js",
   "batch.js",
+  "print.js",
+  "templates/insta-gradient.png",
+  "templates/insta-mono.png",
+  "templates/insta-pastel.png",
   "pwa.js",
   "manifest.webmanifest",
   "vendor/daisyui.css",

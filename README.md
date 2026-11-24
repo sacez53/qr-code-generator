@@ -8,6 +8,8 @@ Un site simple pour créer des QR codes personnalisés, avec aperçu en direct. 
 - **Contenus :** lien, texte, Wi-Fi, e-mail, téléphone, fiche contact (vCard), SMS, WhatsApp, événement de calendrier, position et réseaux sociaux.
 - **Formes :** 6 styles de points, 3 contours de coins et 2 centres de coins.
 - **Cadres :** bandeau en bas ou en haut, bulle ou contour, avec texte personnalisé.
+- **Modèles Instagram :** trois styles prêts, avec votre @ repris dans le cadre.
+- **Impression :** taille conseillée selon la distance de scan, PDF A4 avec un QR code ou une planche d'étiquettes et traits de coupe.
 - **Création en lot :** import d'un CSV ou d'une liste, jusqu'à 500 QR codes réunis dans un ZIP.
 - **Accueil en relief :** la carte suit l'inclinaison de l'iPhone (après autorisation) ou la souris.
 - **Mode sombre :** suit le réglage de l'appareil, ou se choisit avec le bouton soleil/lune.
@@ -59,6 +61,8 @@ generateur.html       Page du générateur
 style.css             Styles du générateur
 app.js                Logique du générateur
 batch.js              Lecture CSV et création du ZIP
+print.js              Planches A4 et création du PDF
+templates/            Aperçus des modèles
 pwa.js                Activation du mode hors ligne
 sw.js                 Cache hors ligne
 manifest.webmanifest  Description de l'application

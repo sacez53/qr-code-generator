@@ -36,6 +36,11 @@
     frameLinked: true,
     frameColor: "#1d2bc4",
     frameTextColor: "#ffffff",
+    frameAuto: false,
+    printDistance: "100",
+    printSize: "",
+    printLayout: "single",
+    printCuts: true,
   };
 
   const ring = (outer, inner) => `<path fill-rule="evenodd" d="${outer} ${inner}"/>`;
@@ -74,6 +79,7 @@
     ],
     gradType: [["linear", "Linéaire"], ["radial", "Radial"]],
     ec: [["L", "7 %"], ["M", "15 %"], ["Q", "25 %"], ["H", "30 %"]],
+    printLayout: [["single", "Un seul"], ["sheet", "Planche d'étiquettes"]],
   };
 
   const PALETTES = [
@@ -99,6 +105,22 @@
     twitch: "https://www.twitch.tv/{}",
     github: "https://github.com/{}",
   };
+
+  // Modèles Instagram : seules les couleurs évoquent la marque, aucun logo.
+  const TEMPLATES = [
+    {
+      id: "insta-gradient", name: "Dégradé",
+      style: { fg: "#962fbf", fg2: "#d62976", gradient: true, gradType: "linear", gradAngle: 45, bg: "#ffffff", dots: "dots", corner: "extra-rounded", cornerDot: "dot", frame: "bottom" },
+    },
+    {
+      id: "insta-mono", name: "Noir et blanc",
+      style: { fg: "#15182e", gradient: false, bg: "#ffffff", dots: "rounded", corner: "extra-rounded", cornerDot: "dot", frame: "bubble" },
+    },
+    {
+      id: "insta-pastel", name: "Pastel",
+      style: { fg: "#9d174d", gradient: false, bg: "#fdf2f8", dots: "classy-rounded", corner: "extra-rounded", cornerDot: "square", frame: "outline" },
+    },
+  ];
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -567,6 +589,7 @@
     el.download.disabled = !ready;
     el.copy.disabled = !ready;
     $("#quick-download").disabled = !ready;
+    refreshPrint();
     refreshWizard();
   }
 
@@ -764,6 +787,7 @@
       else input.value = state.fields[name] ?? "";
       const handler = () => {
         state.fields[name] = input.type === "checkbox" ? input.checked : input.value;
+        if (name === "socialUser" && state.frameAuto) state.frameText = instagramText();
         schedule();
       };
       input.addEventListener("input", handler);
@@ -773,8 +797,10 @@
     $$("[data-key]").forEach((input) => {
       const key = input.dataset.key;
       input.addEventListener(input.type === "range" || input.type === "text" ? "input" : "change", () => {
+        if (key === "frameText") state.frameAuto = false;
+        if (key === "printDistance") state.printSize = "";
         if (input.type === "checkbox") {
-          popNext = true;
+          popNext = !key.startsWith("print");
           state[key] = input.checked;
           if (key === "linked" && !input.checked) {
             state.cornerColor = state.fg;
@@ -1028,6 +1054,126 @@
       });
       logoError("");
       schedule();
+    });
+  }
+
+  /* Modèles Instagram */
+
+  const instagramText = () => {
+    const user = f("socialUser").replace(/^@+/, "");
+    return user ? `@${user}` : "Suivez-nous";
+  };
+
+  function buildTemplates() {
+    $("#template-list").replaceChildren(...TEMPLATES.map((template) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "card card-border template";
+      button.innerHTML = `<figure><img src="templates/${template.id}.png" alt="" width="240" loading="lazy" /></figure><span class="card-body"><span class="card-title"></span></span>`;
+      $(".card-title", button).textContent = template.name;
+      button.setAttribute("aria-label", `Appliquer le modèle ${template.name}`);
+      button.addEventListener("click", () => {
+        Object.assign(state, {
+          transparent: false, linked: true, frameLinked: true, frameTextSize: 100, margin: 48,
+          ...template.style,
+          type: "social",
+          frameAuto: true,
+        });
+        state.cornerColor = state.cornerDotColor = state.frameColor = state.fg;
+        state.fields.socialNet = "instagram";
+        state.frameText = instagramText();
+        $('[data-field="socialNet"]').value = "instagram";
+        popNext = true;
+        schedule();
+        toast(`Modèle « ${template.name} » appliqué.`);
+        if (!f("socialUser")) $('[data-field="socialUser"]').focus();
+      });
+      return button;
+    }));
+  }
+
+  /* Impression */
+
+  let moduleCache = { key: "", count: 0 };
+
+  function moduleCount(data) {
+    const key = `${effectiveEc()}|${data}`;
+    if (moduleCache.key !== key) {
+      const qr = new QRCodeStyling({ data: toUtf8Binary(data), qrOptions: { errorCorrectionLevel: effectiveEc() } })._qr;
+      moduleCache = { key, count: qr ? qr.getModuleCount() : 25 };
+    }
+    return moduleCache.count;
+  }
+
+  const cm = (value) => `${String(Math.round(value * 10) / 10).replace(".", ",")} cm`;
+
+  // Règle courante : un côté de QR code d'au moins 1/10 de la distance de scan,
+  // agrandi quand le code contient beaucoup de points.
+  function printInfo() {
+    if (!currentData) return null;
+    const modules = moduleCount(currentData);
+    const layout = frameLayout(1000, true);
+    const ratio = layout.height / layout.width;
+    const qrShare = layout.qrSize / layout.width;
+    const distance = Number(state.printDistance);
+    const qrMin = Math.max(2, distance / 10) * Math.max(1, modules / 29);
+    const needed = Math.ceil((qrMin / qrShare) * 2) / 2;
+    const maxWidth = Math.min(19, Math.floor(((QRPrint.PAGE.h - 2) / ratio) * 2) / 2);
+    const recommended = Math.min(needed, maxWidth);
+    const width = Math.min(maxWidth, Math.max(1.5, parseFloat(state.printSize) || recommended));
+    return { ratio, needed, maxWidth, recommended, width, height: width * ratio, distance };
+  }
+
+  function refreshPrint() {
+    const info = printInfo();
+    $("#print-run").disabled = !info;
+    if (!info) return;
+    // Sans largeur choisie, la taille conseillée suit les réglages.
+    const sizeInput = $('[data-key="printSize"]');
+    if (!parseFloat(state.printSize) && document.activeElement !== sizeInput) sizeInput.value = String(info.recommended);
+    $('[data-key="printSize"]').max = String(info.maxWidth);
+    const where = info.distance >= 100 ? `${info.distance / 100} m` : `${info.distance} cm`;
+    $("#print-advice").textContent = info.needed > info.maxWidth
+      ? `Pour un scan à ${where}, prévoyez au moins ${cm(info.needed)} de large : c'est plus grand qu'une page A4, imprimez sur un format plus grand.`
+      : `Pour un scan à ${where}, prévoyez au moins ${cm(info.needed)} de large.`;
+    const warning = $("#print-warning");
+    warning.hidden = info.width >= info.needed;
+    warning.textContent = `À ${cm(info.width)}, ce QR code risque de ne pas être lu à ${where}.`;
+    const { cols, rows } = QRPrint.grid(info.width, info.height, state.printLayout);
+    const size = `${cm(info.width)} × ${cm(info.height)}`;
+    $("#print-summary").textContent = state.printLayout === "sheet"
+      ? `${cols * rows} étiquette${cols * rows > 1 ? "s" : ""} de ${size} par page A4 (${cols} × ${rows}).`
+      : `Un QR code de ${size}, centré sur une page A4.`;
+  }
+
+  function bindPrint() {
+    const button = $("#print-run");
+    button.addEventListener("click", async () => {
+      const info = printInfo();
+      if (!info) return;
+      button.disabled = true;
+      const spinner = document.createElement("span");
+      spinner.className = "loading loading-spinner loading-sm";
+      button.prepend(spinner);
+      try {
+        // 300 points par pouce : la qualité d'impression standard.
+        const px = Math.min(4096, Math.round((info.width / 2.54) * 300));
+        const image = await renderBlob(currentData, "jpeg", px);
+        const layout = frameLayout(px, true);
+        const pdf = QRPrint.makePdf({
+          jpeg: new Uint8Array(await image.arrayBuffer()),
+          pxW: layout.width, pxH: layout.height,
+          wCm: info.width, hCm: info.height,
+          layout: state.printLayout, cuts: state.printCuts,
+        });
+        const outcome = await saveBlob(pdf, "qrcode.pdf");
+        if (outcome !== "cancelled") toast("PDF créé.");
+      } catch {
+        toast("Création du PDF impossible. Réduisez la taille.", "error");
+      } finally {
+        spinner.remove();
+        button.disabled = !currentData;
+      }
     });
   }
 
@@ -1453,7 +1599,9 @@
 
   /* Démarrage */
 
-  ["type", "dots", "corner", "cornerDot", "frame", "gradType", "ec"].forEach(buildChoices);
+  ["type", "dots", "corner", "cornerDot", "frame", "gradType", "ec", "printLayout"].forEach(buildChoices);
+  buildTemplates();
+  bindPrint();
   $$("[data-color]").forEach(buildColor);
   buildSwatches();
   buildFramePresets();

@@ -187,6 +187,12 @@
       </div>
     </section>
 
+    <section class="group keep-title with-rule" id="templates" data-tab="content">
+      <h2>Modèles Instagram</h2>
+      <p class="hint">Un style prêt pour votre profil. Saisissez ensuite votre nom d'utilisateur.</p>
+      <div class="template-list" id="template-list"></div>
+    </section>
+
     <section class="group" data-tab="shapes">
       <h2>Formes</h2>
       <h3 id="l-dots">Points</h3>
@@ -280,6 +286,31 @@
       </div>
     </section>
 
+    <section class="group keep-title with-rule" id="print" data-tab="export">
+      <h2>Impression</h2>
+      <div class="stack">
+        <label class="fieldset"><span class="fieldset-legend">Distance de scan</span>
+          <select class="select" data-key="printDistance">
+            <option value="30">30 cm : carte de visite, flyer</option>
+            <option value="100">1 m : table, comptoir</option>
+            <option value="200">2 m : affiche, vitrine</option>
+            <option value="500">5 m : grande affiche</option>
+            <option value="1000">10 m : bâche, panneau</option>
+          </select></label>
+        <div class="alert alert-info alert-soft" id="print-advice" role="note"></div>
+        <label class="fieldset"><span class="fieldset-legend">Largeur imprimée (cm)</span>
+          <input class="input" type="number" data-key="printSize" min="1.5" max="19" step="0.5" inputmode="decimal" /></label>
+        <p class="alert alert-warning alert-soft" id="print-warning" role="alert" hidden></p>
+        <div>
+          <h3 id="l-printLayout">Mise en page A4</h3>
+          <div class="choices join" id="printLayout" role="radiogroup" aria-labelledby="l-printLayout"></div>
+        </div>
+        <label class="check"><input class="toggle toggle-primary" type="checkbox" data-key="printCuts" /> Traits de coupe</label>
+        <p class="hint" id="print-summary"></p>
+        <button class="btn btn-primary" type="button" id="print-run">Créer le PDF</button>
+      </div>
+    </section>
+
     <section class="group keep-title with-rule" id="batch" data-tab="export">
       <h2>Création en lot</h2>
       <div class="stack">
@@ -365,6 +396,7 @@
   <script src="vendor/qr-code-styling.js"></script>
   <script src="vendor/font-data.js"></script>
   <script src="batch.js"></script>
+  <script src="print.js"></script>
   <script src="app.js"></script>
   <script src="pwa.js"></script>
 </body>
