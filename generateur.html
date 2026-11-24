@@ -38,7 +38,7 @@
       <button class="btn btn-sm quick" type="button" id="quick-download">Télécharger</button>
     </div>
     <div class="sticker-wrap">
-      <div class="sticker" id="sticker">
+      <div class="sticker skeleton" id="sticker">
         <canvas id="preview" width="1000" height="1000" role="img" hidden></canvas>
         <p class="empty" id="empty" hidden></p>
       </div>
@@ -190,7 +190,7 @@
         <label class="check"><input class="toggle toggle-primary" type="checkbox" data-key="gradient" /> Dégradé</label>
         <div class="stack" id="gradient-options" hidden>
           <div class="color" data-color="fg2"><span>Seconde couleur</span></div>
-          <div class="choices" id="gradType" role="radiogroup" aria-label="Type de dégradé"></div>
+          <div class="choices join" id="gradType" role="radiogroup" aria-label="Type de dégradé"></div>
           <label class="slider" id="angle-row"><span>Angle</span><output data-for="gradAngle"></output>
             <input class="range range-primary range-sm" type="range" data-key="gradAngle" min="0" max="360" step="5" /></label>
         </div>
@@ -260,7 +260,7 @@
           <input class="range range-primary range-sm" type="range" data-key="margin" min="0" max="120" step="4" /></label>
         <div>
           <h3 id="l-ec">Résistance aux dégâts</h3>
-          <div class="choices" id="ec" role="radiogroup" aria-labelledby="l-ec"></div>
+          <div class="choices join" id="ec" role="radiogroup" aria-labelledby="l-ec"></div>
         </div>
       </div>
     </section>
@@ -331,6 +331,20 @@
       <button class="btn btn-primary" type="button" id="next">Suivant</button>
     </div>
   </form>
+
+  <div class="toast toast-top toast-center" id="toasts" aria-live="polite"></div>
+
+  <dialog class="modal modal-bottom sm:modal-middle" id="reset-dialog" aria-labelledby="reset-title">
+    <div class="modal-box">
+      <h3 id="reset-title">Réinitialiser le QR code ?</h3>
+      <p>Le contenu, les formes, les couleurs, le cadre et le logo reviennent aux réglages de départ.</p>
+      <div class="modal-action">
+        <form method="dialog"><button class="btn btn-outline">Annuler</button></form>
+        <button class="btn btn-error" type="button" id="reset-confirm">Réinitialiser</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>Fermer</button></form>
+  </dialog>
 
 
   <script src="vendor/qr-code-styling.js"></script>

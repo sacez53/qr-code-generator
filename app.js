@@ -118,6 +118,9 @@
   let currentData = "";
   let refreshBatch = () => {};
   let refreshWizard = () => {};
+  let popNext = false;
+  const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const EASE = "cubic-bezier(.22, 1, .36, 1)";
   const previewContext = el.preview.getContext("2d");
 
   const COMPACT_QUERY = "(max-width: 860px), (max-height: 560px) and (max-width: 1000px)";
@@ -554,7 +557,13 @@
     drawTimer = setTimeout(draw, 40);
   }
 
+  function setStatus(text, kind = "warning") {
+    el.status.textContent = text;
+    el.status.className = text ? `status alert alert-soft alert-${kind}` : "status";
+  }
+
   function setReady(ready) {
+    el.sticker.classList.remove("skeleton");
     el.download.disabled = !ready;
     el.copy.disabled = !ready;
     $("#quick-download").disabled = !ready;
@@ -568,7 +577,7 @@
     el.sticker.classList.remove("has-frame");
     el.empty.hidden = false;
     el.empty.textContent = message;
-    el.status.textContent = isError ? "QR code non généré." : "";
+    setStatus(isError ? "QR code non généré." : "", "error");
     setReady(false);
   }
 
@@ -597,8 +606,13 @@
       el.preview.hidden = false;
       el.empty.hidden = true;
       currentData = data;
-      el.status.textContent = scanWarning();
+      setStatus(scanWarning());
       setReady(true);
+      // Petit rebond quand un réglage visuel change.
+      if (popNext && !reduceMotion()) {
+        el.sticker.animate([{ transform: "scale(.95)" }, { transform: "none" }], { duration: 320, easing: "cubic-bezier(.34, 1.56, .64, 1)" });
+      }
+      popNext = false;
     } catch (error) {
       if (token !== drawToken) return;
       const tooLong = /overflow|length/i.test(String(error?.message ?? error));
@@ -614,7 +628,7 @@
     const root = $(`#${key}`);
     root.replaceChildren(...OPTIONS[key].map(([value, label, icon]) => {
       const wrap = document.createElement("label");
-      wrap.className = "btn choice";
+      wrap.className = root.classList.contains("join") ? "btn choice join-item" : "btn choice";
       wrap.title = label;
       const input = document.createElement("input");
       input.type = "radio";
@@ -630,7 +644,14 @@
       }
       input.addEventListener("change", () => {
         state[key] = value;
+        popNext = key !== "type";
         schedule();
+        if (key === "type" && !reduceMotion()) {
+          $(`[data-type="${value}"]`).animate(
+            [{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }],
+            { duration: 240, easing: EASE },
+          );
+        }
       });
       return wrap;
     }));
@@ -753,6 +774,7 @@
       const key = input.dataset.key;
       input.addEventListener(input.type === "range" || input.type === "text" ? "input" : "change", () => {
         if (input.type === "checkbox") {
+          popNext = true;
           state[key] = input.checked;
           if (key === "linked" && !input.checked) {
             state.cornerColor = state.fg;
@@ -795,7 +817,10 @@
       button.title = name;
       button.setAttribute("aria-label", `Palette ${name}`);
       button.style.background = `linear-gradient(135deg, ${fg} 50%, ${bg} 50%)`;
+      button.classList.add("tooltip");
+      button.dataset.tip = name;
       button.addEventListener("click", () => {
+        popNext = true;
         Object.assign(state, { fg, bg, cornerColor: fg, cornerDotColor: fg, frameColor: fg, frameTextColor: readableOn(fg), transparent: false, gradient: false });
         schedule();
       });
@@ -933,25 +958,43 @@
     return "downloaded";
   }
 
-  function flash(message) {
-    el.status.textContent = message;
-    setTimeout(() => {
-      if (el.status.textContent === message) el.status.textContent = currentData ? scanWarning() : "";
-    }, 2500);
+  // Notification daisyUI qui apparaît puis s'efface.
+  function toast(message, kind = "success") {
+    const item = document.createElement("div");
+    item.className = `alert alert-${kind}`;
+    item.setAttribute("role", kind === "error" ? "alert" : "status");
+    item.textContent = message;
+    $("#toasts").append(item);
+    const still = reduceMotion();
+    if (!still) {
+      item.animate([{ opacity: 0, transform: "translateY(-14px) scale(.96)" }, { opacity: 1, transform: "none" }], { duration: 260, easing: EASE });
+    }
+    setTimeout(async () => {
+      if (!still) {
+        await item.animate([{ opacity: 1 }, { opacity: 0, transform: "translateY(-8px)" }], { duration: 200, easing: "ease-in", fill: "forwards" }).finished.catch(() => {});
+      }
+      item.remove();
+    }, 2600);
   }
+
+  const flash = (message, kind) => toast(message, kind);
 
   function bindExport() {
     el.download.addEventListener("click", async () => {
       if (!currentData) return;
       el.download.disabled = true;
+      const spinner = document.createElement("span");
+      spinner.className = "loading loading-spinner loading-sm";
+      el.download.prepend(spinner);
       try {
         const blob = await exportBlob(state.format, state.size);
         const outcome = await saveBlob(blob, `qrcode.${state.format === "jpeg" ? "jpg" : state.format}`);
         if (outcome === "downloaded") flash("QR code téléchargé.");
         if (outcome === "shared") flash("QR code partagé.");
       } catch {
-        flash("Téléchargement impossible. Essayez un autre format.");
+        flash("Téléchargement impossible. Essayez un autre format.", "error");
       } finally {
+        spinner.remove();
         el.download.disabled = !currentData;
       }
     });
@@ -966,12 +1009,17 @@
           await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
           flash("Image copiée.");
         } catch {
-          flash("Copie refusée par le navigateur. Utilisez le téléchargement.");
+          flash("Copie refusée par le navigateur. Utilisez le téléchargement.", "error");
         }
       });
     }
 
-    $("#reset").addEventListener("click", () => {
+    const resetDialog = $("#reset-dialog");
+    $("#reset").addEventListener("click", () => resetDialog.showModal());
+    $("#reset-confirm").addEventListener("click", () => {
+      resetDialog.close();
+      popNext = true;
+      toast("Réglages réinitialisés.");
       state = clone(DEFAULTS);
       $$("[data-field]").forEach((input) => {
         const name = input.dataset.field;
@@ -1048,7 +1096,10 @@
       const list = entries();
       const usable = list.filter((entry) => entry.data).length;
       ui.frameField.hidden = state.frame === "none";
-      ui.name.textContent = `${batch.name}, ${usable} QR code${usable > 1 ? "s" : ""}`;
+      const count = document.createElement("span");
+      count.className = "badge badge-primary badge-sm";
+      count.textContent = `${usable} QR code${usable > 1 ? "s" : ""}`;
+      ui.name.replaceChildren(`${batch.name} `, count);
       ui.preview.replaceChildren(...list.filter((entry) => entry.data).slice(0, 3).map((entry) => {
         const item = document.createElement("li");
         item.className = "list-row";
@@ -1104,6 +1155,9 @@
       running = true;
       cancelled = false;
       ui.run.disabled = true;
+      const spinner = document.createElement("span");
+      spinner.className = "loading loading-spinner loading-sm";
+      ui.run.prepend(spinner);
       ui.progressBox.hidden = false;
       ui.progress.max = todo.length;
       ui.progress.value = 0;
@@ -1235,9 +1289,18 @@
     const sections = (id) => $$(`.panel [data-tab="${id}"]`);
 
     function show(index, moveFocus) {
+      const from = current;
       current = Math.max(0, Math.min(steps.length - 1, index));
       const id = steps[current];
       $$(".panel [data-tab]").forEach((node) => node.classList.toggle("is-active", node.dataset.tab === id));
+      // L'étape arrive du côté où l'on avance.
+      if (moveFocus && from !== current && !reduceMotion()) {
+        const shift = (current > from ? 1 : -1) * 28;
+        sections(id).forEach((node, i) => node.animate(
+          [{ opacity: 0, transform: `translateX(${shift}px)` }, { opacity: 1, transform: "none" }],
+          { duration: 320, delay: i * 40, easing: EASE, fill: "backwards" },
+        ));
+      }
       buttons.forEach((button, i) => {
         button.classList.toggle("step-primary", i <= current);
         if (i === current) button.setAttribute("aria-current", "step");
