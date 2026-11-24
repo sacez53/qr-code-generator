@@ -1424,6 +1424,33 @@
     html.classList.remove("is-animating");
   }
 
+  /* Mode sombre */
+
+  function bindTheme() {
+    const input = $("#theme-toggle");
+    const html = document.documentElement;
+    const system = matchMedia("(prefers-color-scheme: dark)");
+    const saved = () => {
+      try { return localStorage.getItem("qr-theme"); } catch { return null; }
+    };
+    const apply = (dark) => {
+      html.setAttribute("data-theme", dark ? "qr-dark" : "qr");
+      input.checked = dark;
+    };
+
+    apply(html.getAttribute("data-theme") === "qr-dark");
+    input.addEventListener("change", () => {
+      const dark = input.checked;
+      try { localStorage.setItem("qr-theme", dark ? "dark" : "light"); } catch { /* stockage indisponible */ }
+      // Fondu entre les deux thèmes quand le navigateur le permet.
+      if (document.startViewTransition && !reduceMotion()) document.startViewTransition(() => apply(dark));
+      else apply(dark);
+    });
+    system.addEventListener("change", (event) => {
+      if (!saved()) apply(event.matches);
+    });
+  }
+
   /* Démarrage */
 
   ["type", "dots", "corner", "cornerDot", "frame", "gradType", "ec"].forEach(buildChoices);
@@ -1434,6 +1461,7 @@
   bindLogo();
   bindExport();
   bindWizard();
+  bindTheme();
   bindViewport();
   bindLocate();
   showInstallHint();
