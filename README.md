@@ -9,6 +9,7 @@ Un site simple pour créer des QR codes personnalisés, avec aperçu en direct. 
 - **Formes :** 6 styles de points, 3 contours de coins et 2 centres de coins.
 - **Cadres :** bandeau en bas ou en haut, bulle ou contour, avec texte personnalisé.
 - **Création en lot :** import d'un CSV ou d'une liste, jusqu'à 500 QR codes réunis dans un ZIP.
+- **Accueil en relief :** la carte suit l'inclinaison de l'iPhone (après autorisation) ou la souris.
 - **Mode sombre :** suit le réglage de l'appareil, ou se choisit avec le bouton soleil/lune.
 - **Application :** installable sur l'écran d'accueil et utilisable hors ligne.
 - **Couleurs :** palettes, couleurs libres, dégradé linéaire ou radial, coins séparés et fond transparent.

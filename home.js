@@ -195,6 +195,135 @@
     try { sessionStorage.removeItem("qr-entrance"); } catch { /* stockage indisponible */ }
   });
 
+  /* Relief : la carte suit l'inclinaison du téléphone, ou la souris */
+
+  const card = canvas.parentElement;
+  const hint = document.getElementById("motion-hint");
+  const MAX_TILT = 10;
+  const tilt = { x: 0, y: 0, tx: 0, ty: 0 };
+  let tiltFrame = 0;
+  let neutral = null;
+  let motion = "off";
+
+  const limit = (v) => Math.max(-1, Math.min(1, v));
+
+  function setTiltTarget(nx, ny) {
+    tilt.tx = limit(nx);
+    tilt.ty = limit(ny);
+    if (!tiltFrame) tiltFrame = requestAnimationFrame(tiltTick);
+  }
+
+  function applyTilt() {
+    const { x, y } = tilt;
+    const strength = Math.min(1, Math.hypot(x, y) * 1.4);
+    card.style.setProperty("--rx", `${(-y * MAX_TILT).toFixed(2)}deg`);
+    card.style.setProperty("--ry", `${(x * MAX_TILT).toFixed(2)}deg`);
+    card.style.setProperty("--gx", `${(50 + x * 45).toFixed(1)}%`);
+    card.style.setProperty("--gy", `${(50 + y * 45).toFixed(1)}%`);
+    card.style.setProperty("--glare", strength.toFixed(3));
+    card.style.setProperty("--shx", `${(-x * 18).toFixed(1)}px`);
+    card.style.setProperty("--shy", `${(18 - y * 10).toFixed(1)}px`);
+    // Les points s'arrondissent du côté vers lequel on penche.
+    pointer.x = total / 2 + x * total * 0.45;
+    pointer.y = total / 2 + y * total * 0.45;
+    pointer.target = pointer.power = strength;
+    wake();
+  }
+
+  function tiltTick() {
+    tiltFrame = 0;
+    tilt.x += (tilt.tx - tilt.x) * 0.12;
+    tilt.y += (tilt.ty - tilt.y) * 0.12;
+    const settled = Math.abs(tilt.tx - tilt.x) < 0.002 && Math.abs(tilt.ty - tilt.y) < 0.002;
+    if (settled) {
+      tilt.x = tilt.tx;
+      tilt.y = tilt.ty;
+    }
+    applyTilt();
+    if (!settled) tiltFrame = requestAnimationFrame(tiltTick);
+  }
+
+  function onOrientation(event) {
+    if (event.beta == null || event.gamma == null || still.matches) return;
+    let dx = event.gamma;
+    let dy = event.beta;
+    // Téléphone à l'horizontale : les axes tournent avec l'écran.
+    const angle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+    if (angle === 90) [dx, dy] = [dy, -dx];
+    else if (angle === -90 || angle === 270) [dx, dy] = [-dy, dx];
+    else if (angle === 180) [dx, dy] = [-dx, -dy];
+
+    // La position de départ sert de repère, puis se recentre doucement.
+    if (!neutral) neutral = { x: dx, y: dy };
+    neutral.x += (dx - neutral.x) * 0.01;
+    neutral.y += (dy - neutral.y) * 0.01;
+    setTiltTarget((dx - neutral.x) / 22, (dy - neutral.y) / 22);
+  }
+
+  function startMotion() {
+    if (motion === "on") return;
+    motion = "on";
+    hint.hidden = true;
+    card.classList.add("is-tilting");
+    window.addEventListener("deviceorientation", onOrientation);
+  }
+
+  const needsPermission = typeof DeviceOrientationEvent !== "undefined"
+    && typeof DeviceOrientationEvent.requestPermission === "function";
+  const touchScreen = matchMedia("(hover: none) and (pointer: coarse)").matches;
+
+  // Sur iPhone, Safari n'autorise le gyroscope qu'après un toucher.
+  function askMotion() {
+    if (motion !== "off" || !needsPermission) return;
+    motion = "asking";
+    DeviceOrientationEvent.requestPermission().then((answer) => {
+      motion = "off";
+      if (answer === "granted") {
+        try { localStorage.setItem("qr-motion", "granted"); } catch { /* stockage indisponible */ }
+        startMotion();
+      } else {
+        motion = "denied";
+        hint.hidden = true;
+      }
+    }).catch(() => { motion = "off"; });
+  }
+
+  if (!still.matches && touchScreen && "DeviceOrientationEvent" in window) {
+    if (!needsPermission) {
+      startMotion();
+    } else {
+      let granted = null;
+      try { granted = localStorage.getItem("qr-motion"); } catch { /* stockage indisponible */ }
+      if (granted) {
+        // Déjà accepté : le premier toucher réactive sans nouvelle question.
+        document.addEventListener("touchend", askMotion, { once: true });
+      } else {
+        hint.hidden = false;
+      }
+      hint.addEventListener("click", askMotion);
+      canvas.addEventListener("click", askMotion);
+    }
+  }
+
+  // Ordinateur : la souris fait pencher la carte.
+  card.addEventListener("pointermove", (event) => {
+    if (still.matches || event.pointerType !== "mouse") return;
+    const box = card.getBoundingClientRect();
+    card.classList.add("is-tilting");
+    setTiltTarget(((event.clientX - box.left) / box.width) * 2 - 1, ((event.clientY - box.top) / box.height) * 2 - 1);
+  });
+
+  card.addEventListener("pointerleave", (event) => {
+    if (event.pointerType === "mouse" && motion !== "on") setTiltTarget(0, 0);
+  });
+
+  // Avant de partir, la carte revient à plat pour la transition.
+  enter.addEventListener("click", () => {
+    tilt.x = tilt.tx = tilt.y = tilt.ty = 0;
+    applyTilt();
+    pointer.power = pointer.target = 0;
+  }, { capture: true });
+
   startedAt = performance.now();
   resize();
   wake();

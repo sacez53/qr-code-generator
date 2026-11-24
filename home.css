@@ -28,6 +28,8 @@
 
 * { box-sizing: border-box; }
 
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; background: var(--blue); }
 
 body {
@@ -64,6 +66,47 @@ body {
 }
 
 .home-qr canvas { display: block; width: 100%; height: 100%; }
+
+/* Relief de la carte : inclinaison, reflet et ombre */
+.home-qr { position: relative; transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); }
+
+.home-qr.is-tilting {
+  will-change: transform;
+  box-shadow: var(--shx, 0px) var(--shy, 18px) 50px rgb(5 8 40 / .35);
+}
+
+.home-qr::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%), rgb(255 255 255 / .7), transparent 60%);
+  mix-blend-mode: soft-light;
+  opacity: var(--glare, 0);
+}
+
+/* Placée dans la marge blanche du QR code : elle ne gêne pas la lecture */
+.motion-hint {
+  --btn-color: var(--blue);
+  --btn-fg: var(--white);
+  --btn-shadow: none;
+  position: absolute;
+  bottom: 1.6%;
+  left: 50%;
+  z-index: 1;
+  translate: -50% 0;
+  border: 0;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .motion-hint { animation: hint-pulse 2.4s ease-in-out 1.2s infinite; }
+
+  @keyframes hint-pulse {
+    50% { scale: 1.06; }
+  }
+}
 
 h1 {
   max-width: none;
