@@ -89,7 +89,16 @@ body {
 
 .stage h1 a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
-.quick, .tabs, .choice small { display: none; }
+.choice small { display: none; }
+
+.quick {
+  flex: none;
+  --btn-bg: transparent;
+  --btn-fg: var(--on-stage);
+  --btn-border: var(--on-stage);
+  --btn-shadow: none;
+  --btn-inset: none;
+}
 
 .stage :focus-visible { outline-color: var(--on-stage); }
 
@@ -133,7 +142,7 @@ body {
 
 .is-entering .stage { background: #1d2bc4; transition: none; }
 
-.is-entering .panel, .is-entering .tabs, .is-entering .stage-head,
+.is-entering .panel, .is-entering .stage-head,
 .is-entering .status, .is-entering .sticker { visibility: hidden; }
 
 .is-animating { overflow-x: clip; }
@@ -151,7 +160,45 @@ body {
 }
 
 /* Panneau */
-.panel { display: flex; flex-direction: column; min-width: 0; background: var(--color-base-200); }
+.panel { display: flex; flex-direction: column; min-width: 0; min-height: 100dvh; background: var(--color-base-200); }
+
+/* Parcours par étapes */
+.panel > .wizard-steps {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: grid;
+  width: 100%;
+  padding: 14px 8px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--color-base-200);
+}
+
+.wizard-steps .step { min-width: 0; gap: 2px; color: var(--muted); font-size: 13px; cursor: pointer; }
+
+.wizard-steps .step[aria-current] { color: var(--color-base-content); font-weight: 700; }
+
+.wizard-steps .step:focus-visible { outline-offset: -2px; }
+
+.panel [data-tab]:not(.is-active) { display: none; }
+
+.panel .group:focus { outline: none; }
+
+.wizard-nav {
+  order: 9;
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding: 12px 24px;
+  border-top: 1px solid var(--line);
+  background: var(--color-base-100);
+}
+
+.wizard-nav .btn { min-width: 128px; }
 
 .group { padding: 22px 24px; border-bottom: 1px solid var(--line); }
 
@@ -291,25 +338,22 @@ body {
 
 #batch-result:empty { display: none; }
 
-.reset { align-self: flex-start; margin: 16px 24px 20px; }
-
-/* Export toujours accessible */
-.export {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
+/* Dernière étape : téléchargement, lot, installation */
+.panel > .export {
+  order: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: auto;
-  padding: 12px 24px;
-  border-top: 1px solid var(--color-base-content);
-  background: var(--color-base-200);
+  padding: 0 24px 16px;
 }
 
 .export .btn-primary { grid-column: 1 / -1; }
 
 .export.can-copy .btn-primary { grid-column: 1 / 2; }
+
+.panel > #batch, .panel > #install { order: 2; }
+
+.panel > .reset { order: 3; align-self: flex-start; margin: 16px 24px 20px; }
 
 /* Téléphone et tablette : application plein écran, un réglage à la fois */
 @media (max-width: 860px), (max-height: 560px) and (max-width: 1000px) {
@@ -325,7 +369,7 @@ body {
     height: var(--app-height, 100dvh);
     min-height: 0;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: clamp(230px, 40%, 460px) minmax(0, 1fr) auto;
+    grid-template-rows: clamp(230px, 40%, 460px) minmax(0, 1fr);
     font-size: 16px;
   }
 
@@ -343,17 +387,7 @@ body {
 
   .stage h1 a { display: inline-block; min-height: 44px; line-height: 44px; white-space: nowrap; }
 
-  .quick {
-    display: inline-flex;
-    flex: none;
-    height: 44px;
-    --btn-bg: transparent;
-    --btn-fg: var(--on-stage);
-    --btn-border: var(--on-stage);
-    --btn-shadow: none;
-    --btn-inset: none;
-    font-size: 15px;
-  }
+  .quick { height: 44px; font-size: 15px; }
 
   .sticker { border-radius: 8px; }
 
@@ -373,9 +407,17 @@ body {
     padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
   }
 
+  .panel { min-height: 0; }
+
   .panel > * { flex: none; width: 100%; max-width: 640px; align-self: center; }
 
-  .panel [data-tab]:not(.is-active) { display: none; }
+  .panel > .wizard-steps { max-width: none; padding: 10px 4px 8px; }
+
+  .wizard-steps .step { font-size: 12px; }
+
+  .wizard-nav { max-width: none; padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+
+  .wizard-nav .btn { flex: 1; min-width: 0; }
 
   .group { padding: 16px; border-bottom: 0; }
 
@@ -471,67 +513,23 @@ body {
 
   .logo-file img { width: 56px; height: 56px; }
 
-  .panel .export {
-    order: 1;
-    position: static;
-    margin-top: 0;
-    padding: 0 16px 12px;
-    border-top: 0;
-  }
+  .panel > .export { padding: 0 16px 12px; }
 
   .export .btn-primary, .export.can-copy .btn-primary, .export #copy { grid-column: 1 / -1; }
 
-  .panel #batch, .panel #install { order: 2; }
-
-  .panel .reset {
-    order: 3;
+  .panel > .reset {
     width: calc(100% - 32px);
     max-width: 608px;
     margin: 0 16px 16px;
+    align-self: center;
   }
 
-  /* Barre du bas : composant dock de daisyUI, intégré à la grille */
-  .tabs.dock {
-    position: static;
-    display: flex;
-    height: auto;
-    min-height: calc(60px + env(safe-area-inset-bottom));
-    padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    border-top: 1px solid var(--line);
-    background: var(--color-base-100);
-    color: var(--muted);
-  }
-
-  .tabs.dock > button { min-height: 58px; gap: 2px; }
-
-  .tabs.dock svg {
-    width: 44px;
-    height: 26px;
-    padding: 2px 11px;
-    border-radius: 13px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .tabs.dock .dock-label { font-size: 12px; font-weight: 500; }
-
-  .tabs.dock > [aria-current] { color: var(--color-base-content); }
-
-  .tabs.dock > [aria-current]::after { display: none; }
-
-  .tabs.dock > [aria-current] .dock-label { font-weight: 700; }
-
-  .tabs.dock > [aria-current] svg { background: var(--color-base-content); color: var(--color-base-100); }
-
-  .tabs.dock > button:focus-visible { outline-offset: -3px; }
 
   /* Clavier ouvert : on garde le QR code et le champ visibles */
   .keyboard-open { grid-template-rows: minmax(96px, 30%) minmax(0, 1fr); }
 
-  .keyboard-open .tabs, .keyboard-open .stage-head, .keyboard-open .status { display: none; }
+  .keyboard-open .wizard-steps, .keyboard-open .wizard-nav,
+  .keyboard-open .stage-head, .keyboard-open .status { display: none; }
 
   .keyboard-open .stage { grid-template-rows: minmax(0, 1fr); padding-block: 6px; }
 }
@@ -549,15 +547,13 @@ body {
 
   .stage { grid-row: 1 / -1; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
 
-  .tabs.dock { min-height: calc(44px + env(safe-area-inset-bottom)); padding-left: 0; }
+  .panel > .wizard-steps { padding-block: 6px 4px; }
 
-  .tabs.dock > button { min-height: 44px; }
+  .wizard-steps .step { grid-template-rows: 30px 1fr; }
 
-  .tabs.dock svg { display: none; }
+  .wizard-steps .step::after { width: 1.6rem; height: 1.6rem; }
 
-  .tabs.dock .dock-label { font-size: 13px; }
-
-  .tabs.dock > [aria-current] { box-shadow: inset 0 -3px 0 var(--color-base-content); }
+  .wizard-nav { padding-block: 6px calc(6px + env(safe-area-inset-bottom)); }
 
   .choice.has-icon { height: 60px; }
 

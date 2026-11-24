@@ -47,6 +47,14 @@
   </main>
 
   <form class="panel" id="form" autocomplete="off">
+    <nav class="steps wizard-steps" aria-label="Étapes de création">
+      <button class="step step-primary" type="button" data-tab-button="content" aria-current="step">Contenu</button>
+      <button class="step" type="button" data-tab-button="shapes">Formes</button>
+      <button class="step" type="button" data-tab-button="colors">Couleurs</button>
+      <button class="step" type="button" data-tab-button="logo">Habillage</button>
+      <button class="step" type="button" data-tab-button="export">Exporter</button>
+    </nav>
+
     <section class="group is-active" data-tab="content">
       <h2>Contenu</h2>
       <div class="choices" id="type" role="radiogroup" aria-label="Type de contenu"></div>
@@ -317,15 +325,13 @@
       <button class="btn btn-primary" type="button" id="download">Télécharger</button>
       <button class="btn btn-outline" type="button" id="copy" hidden>Copier l'image</button>
     </section>
+
+    <div class="wizard-nav">
+      <button class="btn btn-outline" type="button" id="prev">Précédent</button>
+      <button class="btn btn-primary" type="button" id="next">Suivant</button>
+    </div>
   </form>
 
-  <nav class="dock tabs" aria-label="Réglages du QR code">
-    <button type="button" data-tab-button="content" aria-current="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"/></svg><span class="dock-label">Contenu</span></button>
-    <button type="button" data-tab-button="shapes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM17.5 4a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zM4 14h7v6H4zM14 14h6v6h-6z"/></svg><span class="dock-label">Formes</span></button>
-    <button type="button" data-tab-button="colors"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s7 7 7 11.5a7 7 0 0 1-14 0C5 10 12 3 12 3z"/></svg><span class="dock-label">Couleurs</span></button>
-    <button type="button" data-tab-button="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM8 8h8v5H8zM8 16.5h8"/></svg><span class="dock-label">Habillage</span></button>
-    <button type="button" data-tab-button="export"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 11 12 15.5 16.5 11M5 20h14"/></svg><span class="dock-label">Exporter</span></button>
-  </nav>
 
   <script src="vendor/qr-code-styling.js"></script>
   <script src="vendor/font-data.js"></script>

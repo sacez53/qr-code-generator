@@ -4,6 +4,7 @@ Un site simple pour créer des QR codes personnalisés, avec aperçu en direct. 
 
 ## Fonctionnalités
 
+- **Parcours en 5 étapes :** Contenu, Formes, Couleurs, Habillage et Exporter, avec les boutons Précédent et Suivant.
 - **Contenus :** lien, texte, Wi-Fi, e-mail, téléphone, fiche contact (vCard), SMS, WhatsApp, événement de calendrier, position et réseaux sociaux.
 - **Formes :** 6 styles de points, 3 contours de coins et 2 centres de coins.
 - **Cadres :** bandeau en bas ou en haut, bulle ou contour, avec texte personnalisé.

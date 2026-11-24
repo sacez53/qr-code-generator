@@ -117,7 +117,10 @@
   let drawTimer = 0;
   let currentData = "";
   let refreshBatch = () => {};
+  let refreshWizard = () => {};
   const previewContext = el.preview.getContext("2d");
+
+  const COMPACT_QUERY = "(max-width: 860px), (max-height: 560px) and (max-width: 1000px)";
 
   /* Persistance */
 
@@ -555,6 +558,7 @@
     el.download.disabled = !ready;
     el.copy.disabled = !ready;
     $("#quick-download").disabled = !ready;
+    refreshWizard();
   }
 
   function showEmpty(message, isError) {
@@ -1217,21 +1221,57 @@
 
   /* Mobile : onglets et clavier virtuel */
 
-  const COMPACT_QUERY = "(max-width: 860px), (max-height: 560px) and (max-width: 1000px)";
 
-  function bindTabs() {
-    $$("[data-tab-button]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const id = button.dataset.tabButton;
-        $$("[data-tab]").forEach((n) => n.classList.toggle("is-active", n.dataset.tab === id));
-        $$("[data-tab-button]").forEach((b) => {
-          if (b === button) b.setAttribute("aria-current", "true");
-          else b.removeAttribute("aria-current");
-        });
-        el.form.scrollTop = 0;
+  /* Parcours par étapes */
+
+  function bindWizard() {
+    const buttons = $$("[data-tab-button]");
+    const steps = buttons.map((button) => button.dataset.tabButton);
+    const prev = $("#prev");
+    const next = $("#next");
+    const compact = matchMedia(COMPACT_QUERY);
+    let current = 0;
+
+    const sections = (id) => $$(`.panel [data-tab="${id}"]`);
+
+    function show(index, moveFocus) {
+      current = Math.max(0, Math.min(steps.length - 1, index));
+      const id = steps[current];
+      $$(".panel [data-tab]").forEach((node) => node.classList.toggle("is-active", node.dataset.tab === id));
+      buttons.forEach((button, i) => {
+        button.classList.toggle("step-primary", i <= current);
+        if (i === current) button.setAttribute("aria-current", "step");
+        else button.removeAttribute("aria-current");
       });
-    });
+      refresh();
+
+      if (compact.matches) el.form.scrollTop = 0;
+      else if (el.form.getBoundingClientRect().top < 0) window.scrollTo({ top: 0 });
+      if (moveFocus) {
+        const first = sections(id)[0];
+        first.setAttribute("tabindex", "-1");
+        first.focus({ preventScroll: true });
+      }
+    }
+
+    // Impossible d'avancer tant que le contenu ne donne pas de QR code.
+    function refresh() {
+      prev.disabled = current === 0;
+      next.hidden = current === steps.length - 1;
+      next.disabled = current === 0 && !currentData;
+      next.title = next.disabled ? "Complétez le contenu pour continuer" : "";
+      if (!next.hidden) next.setAttribute("aria-label", `Suivant : ${buttons[current + 1].textContent}`);
+    }
+
+    buttons.forEach((button, i) => button.addEventListener("click", () => {
+      if (i > 0 && !currentData) return;
+      show(i, true);
+    }));
+    prev.addEventListener("click", () => show(current - 1, true));
+    next.addEventListener("click", () => show(current + 1, true));
     $("#quick-download").addEventListener("click", () => el.download.click());
+    refreshWizard = refresh;
+    show(0, false);
   }
 
   function bindViewport() {
@@ -1309,7 +1349,6 @@
       ], motion),
       ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, delay: 170, easing: "linear", fill: "both" }),
       el.form.animate([{ transform: sheet }, { transform: "none" }], motion),
-      $(".tabs").animate([{ transform: sheet }, { transform: "none" }], motion),
       ...[$(".stage-head"), el.status].map((node) => node.animate(
         [{ opacity: 0 }, { opacity: 1 }],
         { duration: 240, delay: 220, easing: "linear", fill: "backwards" },
@@ -1331,7 +1370,7 @@
   bindFields();
   bindLogo();
   bindExport();
-  bindTabs();
+  bindWizard();
   bindViewport();
   bindLocate();
   showInstallHint();
